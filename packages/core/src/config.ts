@@ -39,6 +39,11 @@ const DEFAULT_RESPAWN_LIMIT = 3;
 // (judgement markers like "plan_posted" are vestigial under §5 — the verdict drives judgement stages).
 const CHECK_SYNONYMS: Record<string, string> = { ci_green: "ci", tests_green: "tests" };
 
+const finiteOr = (v: unknown, fallback: number): number => {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
+};
+
 function asRecord(v: unknown, where: string): Record<string, unknown> {
   if (v == null || typeof v !== "object" || Array.isArray(v)) throw new Error(`loadLifecycle: ${where} must be an object`);
   return v as Record<string, unknown>;
@@ -73,13 +78,13 @@ export function loadLifecycle(json: unknown): LifecycleConfig {
     stages: mapStages(asRecord(j.stages, "stages")),
     backwardEdges: {},
     budgets: {
-      transitionBudget: Number(budgetsRaw.transition_budget ?? 0),
-      bounceLimit: Number(budgetsRaw.bounce_limit ?? 0),
-      respawnLimit: Number(budgetsRaw.respawn_limit ?? DEFAULT_RESPAWN_LIMIT),
+      transitionBudget: finiteOr(budgetsRaw.transition_budget, 50),
+      bounceLimit: finiteOr(budgetsRaw.bounce_limit, 3),
+      respawnLimit: finiteOr(budgetsRaw.respawn_limit, DEFAULT_RESPAWN_LIMIT),
     },
     lease: {
-      ttlSeconds: Number(leaseRaw.ttl_seconds ?? 1800),
-      skewGuardSeconds: Number(leaseRaw.skew_guard_seconds ?? 0),
+      ttlSeconds: finiteOr(leaseRaw.ttl_seconds, 1800),
+      skewGuardSeconds: finiteOr(leaseRaw.skew_guard_seconds, 0),
     },
   };
 

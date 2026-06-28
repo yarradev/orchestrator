@@ -31,6 +31,14 @@ export function decide(c: CanonicalCard, lc: LifecycleConfig, nowMs: number): De
   if (st.terminal) return mk("noop", `card is terminal (${c.stage})`);
   if (c.malformed && c.malformed.length > 0) return escalate(c, `malformed card: ${c.malformed.join("; ")}`);
 
+  const b = c.counters;
+  if (b.transitions >= lc.budgets.transitionBudget)
+    return escalate(c, `transition budget exceeded (${b.transitions}/${lc.budgets.transitionBudget})`);
+  for (const edge of Object.keys(b.bounces)) {
+    if (b.bounces[edge]! >= lc.budgets.bounceLimit)
+      return escalate(c, `bounce limit exceeded on ${edge} (${b.bounces[edge]}/${lc.budgets.bounceLimit})`);
+  }
+
   // Branches added in precedence order by Tasks 2-9. Until then, a non-terminal stage is a no-op.
   return mk("noop", `no decision branch matched for stage ${c.stage}`);
 }
