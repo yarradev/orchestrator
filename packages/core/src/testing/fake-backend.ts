@@ -41,6 +41,15 @@ export class InMemoryBoardBackend implements BoardBackend {
     return c.lease && c.lease.expiresAt > this.now() ? c.lease : null;
   }
 
+  private appendKeyed(c: CanonicalCard, key: string, body: string): void {
+    const scopedKey = `${c.id} ${key}`;
+    if (this.appendedKeys.has(scopedKey)) return;
+    this.appendedKeys.add(scopedKey);
+    const list = this.notesById.get(c.id) ?? [];
+    list.push(body);
+    this.notesById.set(c.id, list);
+  }
+
   async applyOps(ref: CardRef, ops: Op[], fence: Fence): Promise<ApplyResult> {
     const c = this.cards.get(ref.id);
     if (!c) throw new Error(`no such card: ${ref.id}`);
@@ -80,13 +89,7 @@ export class InMemoryBoardBackend implements BoardBackend {
           break;
         }
         case "note": {
-          const scopedKey = `${c.id} ${op.key}`;
-          if (!this.appendedKeys.has(scopedKey)) {
-            this.appendedKeys.add(scopedKey);
-            const list = this.notesById.get(c.id) ?? [];
-            list.push(op.body);
-            this.notesById.set(c.id, list);
-          }
+          this.appendKeyed(c, op.key, op.body);
           results.push({ op, outcome: "committed" });
           break;
         }
@@ -104,13 +107,7 @@ export class InMemoryBoardBackend implements BoardBackend {
           break;
         }
         case "ask": {
-          const scopedKey = `${c.id} ${op.key}`;
-          if (!this.appendedKeys.has(scopedKey)) {
-            this.appendedKeys.add(scopedKey);
-            const list = this.notesById.get(c.id) ?? [];
-            list.push(op.body);
-            this.notesById.set(c.id, list);
-          }
+          this.appendKeyed(c, op.key, op.body);
           results.push({ op, outcome: "committed" });
           break;
         }

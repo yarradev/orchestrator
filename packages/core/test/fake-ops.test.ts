@@ -48,4 +48,11 @@ describe("InMemoryBoardBackend close/ask/linkPR/pushHead (P2a)", () => {
     await be.applyOps(ref("c5"), [{ kind: "pushHead", head: "bbb" }], fence);
     expect((await be.readCard(ref("c5"))).pr?.head).toBe("bbb");
   });
+
+  it("pushHead fails when no PR is linked", async () => {
+    const be2 = new InMemoryBoardBackend(["done"]);
+    be2.seed(makeCanonicalCard({ id: "c6", stage: "development" }));
+    const r = await be2.applyOps(ref("c6"), [{ kind: "pushHead", head: "x" }], fence);
+    expect(r.results[0]!.outcome).toBe("failed");
+  });
 });
