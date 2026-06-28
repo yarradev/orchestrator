@@ -14,6 +14,9 @@ export function leaseExpired(c: CanonicalCard, lc: LifecycleConfig, nowMs: numbe
 const mk = (action: Decision["action"], reason: string, ops: Op[] = [], dispatch?: Decision["dispatch"]): Decision =>
   ({ action, reason, ops, dispatch });
 
+const clearLeaseIfRunning = (c: CanonicalCard): Op[] =>
+  c.overlays.includes("agent-running") ? [{ kind: "clearLease", epoch: currentEpoch(c) }] : [];
+
 function escalate(c: CanonicalCard, reason: string): Decision {
   const ops: Op[] = [
     { kind: "note", body: `ESCALATE @human: ${reason}`, key: keyFor(c, "escalate") },
@@ -37,6 +40,23 @@ export function decide(c: CanonicalCard, lc: LifecycleConfig, nowMs: number): De
   for (const edge of Object.keys(b.bounces)) {
     if (b.bounces[edge]! >= lc.budgets.bounceLimit)
       return escalate(c, `bounce limit exceeded on ${edge} (${b.bounces[edge]}/${lc.budgets.bounceLimit})`);
+  }
+
+  if (c.overlays.includes("blocked")) {
+    const bq = c.questions.blocking;
+    if (bq?.answerPending) return mk("unblock", "answer received; resuming owner", [{ kind: "setOverlay", overlay: "blocked", on: false }]);
+    if (bq?.deadlinePassed) return escalate(c, "decision deadline passed while blocked");
+    return mk("noop", "parked: blocked awaiting input");
+  }
+
+  if (c.questions.blocking && !c.questions.blocking.answered) {
+    const cat = c.questions.blocking.category || "product";
+    const ops: Op[] = [
+      { kind: "setOverlay", overlay: "blocked", on: true },
+      ...clearLeaseIfRunning(c),
+      { kind: "ask", category: cat, body: `Blocking question (cat:${cat}) needs an answer.`, key: keyFor(c, "ask") },
+    ];
+    return mk("block", `routing QUESTION cat:${cat}`, ops);
   }
 
   // Branches added in precedence order by Tasks 2-9. Until then, a non-terminal stage is a no-op.
