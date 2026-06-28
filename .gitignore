@@ -3,3 +3,6 @@ dist
 *.tsbuildinfo
 .claude-plugin/local
 skills/**/config/board.json
+
+# SDD scratch (briefs/reports/ledger)
+.superpowers/
