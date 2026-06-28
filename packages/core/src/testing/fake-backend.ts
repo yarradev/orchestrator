@@ -3,11 +3,15 @@ import type { ApplyResult, BackendCapabilities, CanonicalCard, CardRef, Fence, O
 
 export class InMemoryBoardBackend implements BoardBackend {
   private cards = new Map<string, CanonicalCard>();
+  private appendedKeys = new Set<string>();
+  private notesById = new Map<string, string[]>();
   readonly capabilities: BackendCapabilities = {
     ci: "push", fencing: "orchestrator", prDiff: false,
     projectsView: false, richComments: true, assignees: false, milestones: false,
   };
   constructor(private readonly states: string[], private readonly terminal: string[]) {}
+
+  noteCount(id: string): number { return this.notesById.get(id)?.length ?? 0; }
 
   seed(card: CanonicalCard): void { this.cards.set(card.id, structuredClone(card)); }
 
@@ -55,6 +59,31 @@ export class InMemoryBoardBackend implements BoardBackend {
         }
         case "clearLease": {
           c.lease = null;
+          results.push({ op, outcome: "committed" });
+          break;
+        }
+        case "setStage": {
+          if (c.stage !== op.from) { results.push({ op, outcome: "fenced", reason: `stage ${c.stage} != ${op.from}` }); break; }
+          c.stage = op.to;
+          c.counters.transitions += 1;
+          results.push({ op, outcome: "committed" });
+          break;
+        }
+        case "reject": {
+          if (c.stage !== op.from) { results.push({ op, outcome: "fenced", reason: `stage ${c.stage} != ${op.from}` }); break; }
+          c.stage = op.to;
+          c.counters.transitions += 1;
+          c.counters.bounces[op.edge] = (c.counters.bounces[op.edge] ?? 0) + 1;
+          results.push({ op, outcome: "committed" });
+          break;
+        }
+        case "note": {
+          if (!this.appendedKeys.has(op.key)) {
+            this.appendedKeys.add(op.key);
+            const list = this.notesById.get(c.id) ?? [];
+            list.push(op.body);
+            this.notesById.set(c.id, list);
+          }
           results.push({ op, outcome: "committed" });
           break;
         }
