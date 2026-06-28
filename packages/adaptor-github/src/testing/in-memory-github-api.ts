@@ -8,10 +8,12 @@ export class InMemoryGitHubApi implements GitHubApi {
   private rollups = new Map<string, CheckRollup>(); // head sha -> rollup
   private seq = 0;
 
-  async listIssues(opts: { labels?: string[]; state?: "open" | "closed" }): Promise<GhIssue[]> {
+  async listIssues(opts: { labels?: string[]; state?: "open" | "closed" | "all" }): Promise<GhIssue[]> {
     const out: GhIssue[] = [];
     for (const i of this.issues.values()) {
-      if (opts.state && i.state !== opts.state) continue;
+      // Mirror gh: undefined → open only; "all" → every state; specific → filter
+      if (opts.state === undefined && i.state !== "open") continue;
+      if (opts.state !== undefined && opts.state !== "all" && i.state !== opts.state) continue;
       if (opts.labels && !opts.labels.every((l) => i.labels.includes(l))) continue;
       out.push(structuredClone(i));
     }

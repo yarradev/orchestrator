@@ -18,7 +18,7 @@ export interface GhLinkedPr {
 
 export interface GitHubApi {
   // ── ticket plane ──
-  listIssues(opts: { labels?: string[]; state?: "open" | "closed" }): Promise<GhIssue[]>;
+  listIssues(opts: { labels?: string[]; state?: "open" | "closed" | "all" }): Promise<GhIssue[]>;
   getIssue(num: number): Promise<GhIssue | null>;
   createIssue(opts: { title: string; body: string; labels?: string[] }): Promise<GhIssue>;
   setLabels(num: number, add: string[], remove: string[]): Promise<void>;

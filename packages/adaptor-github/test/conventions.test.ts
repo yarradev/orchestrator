@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   stageLabel, parseStage, typeLabel, parseType, OVERLAY_LABELS, parseOverlays,
   idMarker, parseId, parseLease, setLease, noteMarker, hasNote,
+  parseCounters, setCounters,
 } from "../src/conventions.js";
 import type { Lease } from "@yarradev/core";
 
@@ -43,5 +44,20 @@ describe("conventions", () => {
     expect(noteMarker("k1")).toBe("<!--yd:note=k1-->");
     expect(hasNote([`${noteMarker("k1")}\nbody`], "k1")).toBe(true);
     expect(hasNote(["unrelated"], "k1")).toBe(false);
+  });
+
+  it("counters: parseCounters defaults to zeros; setCounters/parseCounters round-trips; no duplicate markers", () => {
+    // Default when absent
+    expect(parseCounters("some body text")).toEqual({ transitions: 0, bounces: {} });
+
+    // Round-trip
+    const counters = { transitions: 3, bounces: { "dev→spec": 2, "test→dev": 1 } };
+    const body = setCounters("some body text", counters);
+    expect(parseCounters(body)).toEqual(counters);
+
+    // Replacement: no duplicate markers
+    const updated = setCounters(body, { transitions: 4, bounces: { "dev→spec": 3 } });
+    expect(parseCounters(updated)).toEqual({ transitions: 4, bounces: { "dev→spec": 3 } });
+    expect(updated.match(/yd:counters=/g)!.length).toBe(1);
   });
 });

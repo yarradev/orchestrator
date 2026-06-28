@@ -41,3 +41,27 @@ export const setLease = (body: string, lease: Lease | null): string => {
 export const noteMarker = (key: string): string => `<!--yd:note=${key}-->`;
 export const hasNote = (commentBodies: string[], key: string): boolean =>
   commentBodies.some((b) => b.includes(noteMarker(key)));
+
+// ── counters ──
+export interface Counters {
+  transitions: number;
+  bounces: Record<string, number>;
+}
+
+const COUNTERS_RE = /\n?<!--yd:counters=[^>]*-->/g;
+const COUNTERS_ONE = /<!--yd:counters=([^>]*)-->/;
+
+export const parseCounters = (body: string): Counters => {
+  const m = body.match(COUNTERS_ONE);
+  if (!m || !m[1]) return { transitions: 0, bounces: {} };
+  try {
+    return JSON.parse(decodeURIComponent(m[1])) as Counters;
+  } catch {
+    return { transitions: 0, bounces: {} };
+  }
+};
+
+export const setCounters = (body: string, counters: Counters): string => {
+  const stripped = body.replace(COUNTERS_RE, "");
+  return `${stripped}\n<!--yd:counters=${encodeURIComponent(JSON.stringify(counters))}-->`;
+};

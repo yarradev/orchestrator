@@ -25,6 +25,8 @@ import {
   setLease,
   noteMarker,
   hasNote,
+  parseCounters,
+  setCounters,
 } from "./conventions.js";
 
 export class GitHubAdaptor implements BoardBackend {
@@ -45,7 +47,7 @@ export class GitHubAdaptor implements BoardBackend {
   }
 
   private async resolve(id: string): Promise<GhIssue | null> {
-    const issues = await this.api.listIssues({});
+    const issues = await this.api.listIssues({ state: "all" });
     return issues.find((i) => parseId(i.body) === id) ?? null;
   }
 
@@ -74,7 +76,7 @@ export class GitHubAdaptor implements BoardBackend {
       pr,
       checks: { ci },
       advisors: {},
-      counters: { transitions: 0, bounces: {} },
+      counters: parseCounters(body),
       questions: { open: overlays.includes("blocked") ? 1 : 0 },
       title: issue.title,
       parentId: null,
@@ -108,6 +110,7 @@ export class GitHubAdaptor implements BoardBackend {
       body: issue.body,
       state: issue.state,
     };
+    const counters = parseCounters(work.body);
     const results: OpResult[] = [];
 
     for (const op of ops) {
@@ -153,6 +156,9 @@ export class GitHubAdaptor implements BoardBackend {
             await this.api.setLabels(work.number, [stageLabel(op.to)], [stageLabel(op.from)]);
             work.labels = work.labels.filter((l) => l !== stageLabel(op.from));
             work.labels.push(stageLabel(op.to));
+            counters.transitions += 1;
+            work.body = setCounters(work.body, counters);
+            await this.api.updateBody(work.number, work.body);
             results.push({ op, outcome: "committed" });
           }
           break;
@@ -165,6 +171,10 @@ export class GitHubAdaptor implements BoardBackend {
             await this.api.setLabels(work.number, [stageLabel(op.to)], [stageLabel(op.from)]);
             work.labels = work.labels.filter((l) => l !== stageLabel(op.from));
             work.labels.push(stageLabel(op.to));
+            counters.transitions += 1;
+            counters.bounces[op.edge] = (counters.bounces[op.edge] ?? 0) + 1;
+            work.body = setCounters(work.body, counters);
+            await this.api.updateBody(work.number, work.body);
             results.push({ op, outcome: "committed" });
           }
           break;

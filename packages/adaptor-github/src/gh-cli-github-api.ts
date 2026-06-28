@@ -7,7 +7,7 @@ export type GhExec = (args: string[]) => Promise<string>;
 const _execFile = promisify(execFile);
 
 const defaultExec: GhExec = async (args) => {
-  const { stdout } = await _execFile("gh", args, { encoding: "utf8" });
+  const { stdout } = await _execFile("gh", args, { encoding: "utf8", maxBuffer: 10 * 1024 * 1024 });
   return stdout;
 };
 
@@ -29,8 +29,14 @@ function mapIssue(raw: RawIssue): GhIssue {
   };
 }
 
-const FAILURE_CONCLUSIONS = new Set(["failure", "timed_out", "cancelled", "action_required"]);
-const SUCCESS_CONCLUSION = "success";
+const FAILURE_CONCLUSIONS = new Set([
+  "failure", "timed_out", "cancelled", "action_required", "startup_failure",
+]);
+// Terminal non-failure conclusions (success-equivalent)
+const TERMINAL_CONCLUSIONS = new Set([
+  "success", "skipped", "neutral", "stale",
+  "failure", "timed_out", "cancelled", "action_required", "startup_failure",
+]);
 
 const CROSS_REF_QUERY = `
 query($owner: String!, $name: String!, $number: Int!) {
@@ -43,7 +49,6 @@ query($owner: String!, $name: String!, $number: Int!) {
               ... on PullRequest {
                 number
                 state
-                headRefOid
               }
             }
           }
@@ -61,7 +66,7 @@ export class GhCliGitHubApi implements GitHubApi {
     this.exec = exec ?? defaultExec;
   }
 
-  async listIssues(opts: { labels?: string[]; state?: "open" | "closed" }): Promise<GhIssue[]> {
+  async listIssues(opts: { labels?: string[]; state?: "open" | "closed" | "all" }): Promise<GhIssue[]> {
     const args = [
       "issue", "list", "-R", this.repo,
       "--json", "number,title,body,labels,state",
@@ -97,7 +102,9 @@ export class GhCliGitHubApi implements GitHubApi {
     const match = url.match(/\/issues\/(\d+)/);
     if (!match) throw new Error(`could not parse issue number from: ${url}`);
     const num = parseInt(match[1], 10);
-    return (await this.getIssue(num))!;
+    const issue = await this.getIssue(num);
+    if (!issue) throw new Error(`createIssue: issue #${num} not found after create`);
+    return issue;
   }
 
   async setLabels(num: number, add: string[], remove: string[]): Promise<void> {
@@ -138,8 +145,8 @@ export class GhCliGitHubApi implements GitHubApi {
     const gqlOut = await this.exec([
       "api", "graphql",
       "-f", `query=${CROSS_REF_QUERY}`,
-      "-F", `owner=${owner}`,
-      "-F", `name=${name}`,
+      "-f", `owner=${owner}`,
+      "-f", `name=${name}`,
       "-F", `number=${issueNum}`,
     ]);
 
@@ -148,7 +155,7 @@ export class GhCliGitHubApi implements GitHubApi {
         repository?: {
           issue?: {
             timelineItems?: {
-              nodes?: { source?: { number?: number; state?: string; headRefOid?: string } }[];
+              nodes?: { source?: { number?: number; state?: string } }[];
             };
           };
         };
@@ -159,14 +166,15 @@ export class GhCliGitHubApi implements GitHubApi {
     const prs = nodes
       .map((n) => n.source)
       .filter(
-        (s): s is { number: number; state: string; headRefOid: string } =>
+        (s): s is { number: number; state: string } =>
           typeof s?.number === "number" &&
           (s.state === "OPEN" || s.state === "MERGED"),
       );
 
-    if (prs.length !== 1) return null;
-
-    const pr = prs[0];
+    // Dedup by PR number — one PR can produce multiple CrossReferencedEvent nodes
+    const dedupedPrs = [...new Map(prs.map((pr) => [pr.number, pr])).values()];
+    if (dedupedPrs.length !== 1) return null;
+    const pr = dedupedPrs[0];
     const prOut = await this.exec([
       "pr", "view", String(pr.number), "-R", this.repo,
       "--json", "number,headRefOid,files",
@@ -193,7 +201,8 @@ export class GhCliGitHubApi implements GitHubApi {
 
     if (conclusions.length === 0) return "absent";
     if (conclusions.some((c) => c !== null && FAILURE_CONCLUSIONS.has(c))) return "failure";
-    if (conclusions.some((c) => c === null || c !== SUCCESS_CONCLUSION)) return "pending";
+    // Any still-running/queued/null (not a recognized terminal state) → pending
+    if (conclusions.some((c) => c === null || !TERMINAL_CONCLUSIONS.has(c))) return "pending";
     return "success";
   }
 }

@@ -152,4 +152,46 @@ describe("GhCliGitHubApi (injectable exec)", () => {
     const gh = new GhCliGitHubApi("yarradev/x", async () => JSON.stringify(["in_progress"]));
     expect(await gh.getCheckRollup("h")).toBe("pending");
   });
+
+  it("getCheckRollup: skipped/neutral/stale are terminal non-failures → success", async () => {
+    const mk = (cs: string[]) =>
+      new GhCliGitHubApi("yarradev/x", async () => JSON.stringify(cs));
+    expect(await mk(["success", "skipped"]).getCheckRollup("h")).toBe("success");
+    expect(await mk(["neutral"]).getCheckRollup("h")).toBe("success");
+    expect(await mk(["stale"]).getCheckRollup("h")).toBe("success");
+    expect(await mk(["startup_failure"]).getCheckRollup("h")).toBe("failure");
+    expect(await mk(["success", "failure"]).getCheckRollup("h")).toBe("failure");
+  });
+
+  it("resolveLinkedPr: dedupes multiple CrossReferencedEvent nodes for same PR", async () => {
+    const gqlResponse = JSON.stringify({
+      data: {
+        repository: {
+          issue: {
+            timelineItems: {
+              nodes: [
+                { source: { number: 7, state: "OPEN" } },
+                { source: { number: 7, state: "OPEN" } }, // duplicate event
+              ],
+            },
+          },
+        },
+      },
+    });
+    const prViewResponse = JSON.stringify({
+      number: 7,
+      headRefOid: "abc123",
+      files: [{ path: "src/index.ts" }],
+    });
+    const exec: GhExec = async (args) => {
+      if (args[0] === "api" && args[1] === "graphql") return gqlResponse;
+      if (args[0] === "pr") return prViewResponse;
+      return "";
+    };
+    const gh = new GhCliGitHubApi("yarradev/x", exec);
+    const pr = await gh.resolveLinkedPr(42);
+    expect(pr).not.toBeNull();
+    expect(pr!.number).toBe(7);
+    expect(pr!.head).toBe("abc123");
+  });
 });
