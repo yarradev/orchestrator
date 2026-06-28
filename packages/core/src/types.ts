@@ -44,8 +44,12 @@ export type Op =
   | { kind: "reject"; from: string; to: string; epoch: number; edge: string }
   | { kind: "setOverlay"; overlay: Overlay; on: boolean }
   | { kind: "note"; body: string; key: string }
+  | { kind: "ask"; category: string; body: string; key: string }
   | { kind: "veto"; role: string; head: string; reason: string }
+  | { kind: "hold"; role: string; head: string; reason: string }
   | { kind: "clearVeto"; role: string }
+  | { kind: "linkPR"; number: number; head: string; repo: string }
+  | { kind: "pushHead"; head: string }
   | { kind: "close"; from: string; reason: string };
 
 export type OpOutcome = "committed" | "fenced" | "gate_blocked" | "unsupported" | "failed";
