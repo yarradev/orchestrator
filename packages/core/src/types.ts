@@ -14,10 +14,10 @@ export interface CanonicalCard {
   state: "open" | "closed";
   overlays: Overlay[];
   lease: Lease | null;
-  checks: { ci: GateStatus; staging?: GateStatus };
+  checks: { ci: GateStatus; tests?: GateStatus; staging?: GateStatus };
   pr: { number: number; head: string; files: string[] } | null;
   advisors: Record<string, AdvisorState>;
-  counters: { transitions: number; bounces: Record<string, number> };
+  counters: { transitions: number; bounces: Record<string, number>; respawns?: number };
   malformed?: string[]; // non-empty ⇒ card is malformed; never advances (fail-closed escalate)
   children?: { total: number; done: number }; // epic fan-in barrier
   questions: { open: number; blocking?: BlockingQuestion | null };

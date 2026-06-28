@@ -1,6 +1,8 @@
 import type { CanonicalCard, Decision, Op } from "./types.js";
 import type { LifecycleConfig, StageDef } from "./config.js";
 
+const GATE_KEY: Record<string, "ci" | "tests" | "staging"> = { ci_green: "ci", ci: "ci", tests_green: "tests", tests: "tests", staging: "staging" };
+
 export const currentEpoch = (c: CanonicalCard): number => c.epoch ?? 0;
 export const keyFor = (c: CanonicalCard, kind: string): string => `${c.id}:${currentEpoch(c)}:${kind}`;
 
@@ -36,8 +38,14 @@ function advanceForward(c: CanonicalCard, st: StageDef, stagesCfg: Record<string
   return mk("advance", reason, ops);
 }
 
+function dispatchOwner(c: CanonicalCard, lc: LifecycleConfig, st: StageDef, action: "spawn" | "reclaim", reason: string): Decision {
+  const epoch = currentEpoch(c) + 1;
+  const mode = st.gate === "mechanical" ? "mechanical" : "judgement";
+  const respawn = mode === "mechanical" && c.pr != null;
+  return mk(action, reason, [{ kind: "claim", role: st.ownerRole!, epoch, ttlS: lc.lease.ttlSeconds }], { role: st.ownerRole!, epoch, mode, respawn });
+}
+
 export function decide(c: CanonicalCard, lc: LifecycleConfig, nowMs: number): Decision {
-  void nowMs; // used from Task 8 (lease expiry)
   const stagesCfg = c.type === "epic" ? (lc.epicStages ?? {}) : lc.stages;
   const st: StageDef | undefined = stagesCfg[c.stage];
   if (!st) return mk("escalate", `unknown ${c.type} stage: ${c.stage}`);
@@ -86,6 +94,18 @@ export function decide(c: CanonicalCard, lc: LifecycleConfig, nowMs: number): De
     if (ch.total === 0) return escalate(c, `fan-in barrier at ${c.stage} with 0 child stories (decompose produced none?)`);
     if (ch.done >= ch.total) return advanceForward(c, st, stagesCfg, `fan-in: all ${ch.total} child stories done`);
     return mk("noop", `fan-in barrier: ${ch.done}/${ch.total} child stories done`);
+  }
+
+  if (st.gate === "mechanical" && c.pr) {
+    const g = c.checks[GATE_KEY[st.advanceOn ?? "ci"] ?? "ci"] ?? "absent";
+    if (g === "success") return advanceForward(c, st, stagesCfg, `mechanical gate ${st.advanceOn}=success`);
+    if (g === "pending") return mk("noop", `${st.advanceOn} pending`);
+    if (g === "failure") {
+      if (c.lease && !leaseExpired(c, lc, nowMs)) return mk("noop", `${st.advanceOn} failed; worker still holds lease`);
+      if ((c.counters.respawns ?? 0) >= lc.budgets.respawnLimit) return escalate(c, `respawn limit exceeded (${c.counters.respawns}/${lc.budgets.respawnLimit}) on ${c.stage}`);
+      return dispatchOwner(c, lc, st, "spawn", `${st.advanceOn} failed; re-spawn ${st.ownerRole} to fix`);
+    }
+    return mk("noop", `required check ${st.advanceOn} absent (fail-closed)`);
   }
 
   // Branches added in precedence order by Tasks 2-9. Until then, a non-terminal stage is a no-op.
