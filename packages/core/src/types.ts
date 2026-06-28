@@ -17,6 +17,7 @@ export interface CanonicalCard {
   questions: { open: number };
   title: string;
   parentId: string | null;
+  epoch?: number;
 }
 
 export interface CardRef { id: string; stage: string; type: "story" | "epic"; }
@@ -56,3 +57,12 @@ export type OpOutcome = "committed" | "fenced" | "gate_blocked" | "unsupported" 
 export interface OpResult { op: Op; outcome: OpOutcome; reason?: string; }
 export interface ApplyResult { ok: boolean; results: OpResult[]; }
 export interface Fence { epoch: number; holder: string; }
+
+// The pure output of decide() (P2b). Either backend ops to apply, or a dispatch instruction telling the
+// loop to run a role-agent and feed its verdict to reduceVerdict. A dispatch always carries its claim in ops.
+export interface Decision {
+  action: "spawn" | "reclaim" | "advance" | "escalate" | "block" | "unblock" | "veto-clear" | "noop";
+  reason: string;
+  ops: Op[];
+  dispatch?: { role: string; epoch: number; mode: "judgement" | "mechanical"; respawn: boolean };
+}
