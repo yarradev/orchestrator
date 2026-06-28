@@ -19,6 +19,7 @@ export interface CanonicalCard {
   advisors: Record<string, AdvisorState>;
   counters: { transitions: number; bounces: Record<string, number> };
   malformed?: string[]; // non-empty ⇒ card is malformed; never advances (fail-closed escalate)
+  children?: { total: number; done: number }; // epic fan-in barrier
   questions: { open: number; blocking?: BlockingQuestion | null };
   title: string;
   parentId: string | null;
