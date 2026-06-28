@@ -93,3 +93,33 @@ export function loadLifecycle(json: unknown): LifecycleConfig {
   }
   return cfg;
 }
+
+export interface AdvisorPolicy {
+  role: string;
+  authority?: "veto" | "advice";
+  joinsAt: string[];
+  watchPaths: string[];
+  clearAuthority?: string[];
+}
+
+export interface TeamPolicy {
+  advisors: AdvisorPolicy[];
+}
+
+export function loadTeamPolicy(json: unknown): TeamPolicy {
+  if (json == null || typeof json !== "object") return { advisors: [] };
+  const raw = (json as Record<string, unknown>).advisors;
+  if (!Array.isArray(raw)) return { advisors: [] };
+  const advisors: AdvisorPolicy[] = raw.map((a) => {
+    const r = a as Record<string, unknown>;
+    const out: AdvisorPolicy = {
+      role: String(r.role),
+      joinsAt: Array.isArray(r.joins_at) ? r.joins_at.map(String) : [],
+      watchPaths: Array.isArray(r.watch_paths) ? r.watch_paths.map(String) : [],
+    };
+    if (r.authority === "veto" || r.authority === "advice") out.authority = r.authority;
+    if (Array.isArray(r.clear_authority)) out.clearAuthority = r.clear_authority.map(String);
+    return out;
+  });
+  return { advisors };
+}
