@@ -14,6 +14,7 @@ export interface CanonicalCard {
   pr: { number: number; head: string; files: string[] } | null;
   advisors: Record<string, { vetoOpen: boolean; holdOpen: boolean; reviewedHead?: string }>;
   counters: { transitions: number; bounces: Record<string, number> };
+  malformed?: string[]; // non-empty ⇒ card is malformed; never advances (fail-closed escalate)
   questions: { open: number };
   title: string;
   parentId: string | null;
