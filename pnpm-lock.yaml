@@ -15,7 +15,11 @@ importers:
         specifier: ^2.1.0
         version: 2.1.9
 
-  packages/core: {}
+  packages/core:
+    dependencies:
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9
 
 packages:
 

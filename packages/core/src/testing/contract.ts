@@ -36,6 +36,27 @@ export function runBoardBackendContract(h: ContractHarness): void {
       expect(r.results[0].outcome).toBe("fenced");
     });
 
+    it("partial-batch fence is reconcilable forward (committed op stands; re-apply converges)", async () => {
+      const b = await h.make();
+      await h.seed(b, h.card({ id: "p", stage: "dev" }));
+      const r1 = await b.applyOps(ref("p", "dev"),
+        [{ kind: "note", body: "audit", key: "k-recon" },
+         { kind: "setStage", from: "spec", to: "test", epoch: 0 }], { epoch: 0, holder: "orch" });
+      expect(r1.ok).toBe(false);
+      expect(r1.results[0].outcome).toBe("committed"); // note stood (no rollback)
+      expect(r1.results[1].outcome).toBe("fenced");    // wrong-from setStage fenced
+      expect((await b.readCard(ref("p", "dev"))).stage).toBe("dev"); // not moved
+      const r2 = await b.applyOps(ref("p", "dev"),
+        [{ kind: "note", body: "audit", key: "k-recon" },
+         { kind: "setStage", from: "dev", to: "test", epoch: 0 }], { epoch: 0, holder: "orch" });
+      expect(r2.ok).toBe(true);
+      expect((await b.readCard(ref("p", "test"))).stage).toBe("test"); // converged
+    });
+
+    // NOTE: append-dedup is not yet interface-observable on CanonicalCard, so this shared suite
+    // only asserts that re-applying a keyed note stays "committed" (idempotent from the caller's
+    // perspective). Backends must unit-test actual dedup directly (the fake does via noteCount).
+    // Revisit when an append-observable field lands on CanonicalCard (P2).
     it("note is idempotent by key across re-application", async () => {
       const b = await h.make();
       await h.seed(b, h.card({ id: "a", stage: "dev" }));

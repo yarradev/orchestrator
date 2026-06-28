@@ -2,9 +2,8 @@ import { describe, it, expect } from "vitest";
 import { InMemoryBoardBackend } from "../src/testing/fake-backend.js";
 import { makeCanonicalCard } from "../src/card.js";
 
-const states = ["spec", "dev", "test", "done"];
 function fakeWith(id: string, over = {}) {
-  const b = new InMemoryBoardBackend(states, ["done"]);
+  const b = new InMemoryBoardBackend(["done"]);
   b.seed(makeCanonicalCard({ id, ...over }));
   return b;
 }

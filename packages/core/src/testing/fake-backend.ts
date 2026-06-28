@@ -3,16 +3,15 @@ import type { ApplyResult, BackendCapabilities, CanonicalCard, CardRef, Fence, O
 
 export class InMemoryBoardBackend implements BoardBackend {
   private cards = new Map<string, CanonicalCard>();
-  // NOTE: instance-level (not card-scoped). The same note key across two cards in ONE backend
-  // instance dedupes to the first — fine for the single-card-per-backend test pattern, but a
-  // multi-card test must use distinct keys.
+  // NOTE: card-scoped dedup key — stored as `${cardId} ${op.key}`. The same logical note key
+  // on two different cards dedupes independently, as required for multi-card test scenarios.
   private appendedKeys = new Set<string>();
   private notesById = new Map<string, string[]>();
   readonly capabilities: BackendCapabilities = {
     ci: "push", fencing: "orchestrator", prDiff: false,
     projectsView: false, richComments: true, assignees: false, milestones: false,
   };
-  constructor(private readonly states: string[], private readonly terminal: string[]) {}
+  constructor(private readonly terminal: string[]) {}
 
   noteCount(id: string): number { return this.notesById.get(id)?.length ?? 0; }
 
@@ -81,8 +80,9 @@ export class InMemoryBoardBackend implements BoardBackend {
           break;
         }
         case "note": {
-          if (!this.appendedKeys.has(op.key)) {
-            this.appendedKeys.add(op.key);
+          const scopedKey = `${c.id} ${op.key}`;
+          if (!this.appendedKeys.has(scopedKey)) {
+            this.appendedKeys.add(scopedKey);
             const list = this.notesById.get(c.id) ?? [];
             list.push(op.body);
             this.notesById.set(c.id, list);
@@ -91,7 +91,7 @@ export class InMemoryBoardBackend implements BoardBackend {
           break;
         }
         default:
-          results.push({ op, outcome: "failed", reason: `unhandled op ${op.kind}` });
+          results.push({ op, outcome: "unsupported", reason: `unhandled op ${op.kind}` });
       }
     }
     return { ok: results.every((r) => r.outcome === "committed"), results };

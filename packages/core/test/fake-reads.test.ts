@@ -4,7 +4,7 @@ import { makeCanonicalCard } from "../src/card.js";
 
 describe("InMemoryBoardBackend reads", () => {
   it("listReady returns open, non-terminal candidates and readCard returns the full card", async () => {
-    const b = new InMemoryBoardBackend(["spec", "dev", "test", "done"], ["done"]);
+    const b = new InMemoryBoardBackend(["done"]);
     b.seed(makeCanonicalCard({ id: "a", stage: "spec" }));
     b.seed(makeCanonicalCard({ id: "b", stage: "done" })); // terminal → excluded
     b.seed(makeCanonicalCard({ id: "c", stage: "dev", overlays: ["escalated"] }));

@@ -4,7 +4,7 @@ import { makeCanonicalCard } from "../src/card.js";
 
 const ref = (id: string, stage: string) => ({ id, stage, type: "story" as const });
 function fake(id: string, stage = "dev") {
-  const b = new InMemoryBoardBackend(["spec", "dev", "test", "done"], ["done"]);
+  const b = new InMemoryBoardBackend(["done"]);
   b.seed(makeCanonicalCard({ id, stage }));
   return b;
 }

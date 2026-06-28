@@ -4,7 +4,7 @@ import { makeCanonicalCard } from "../src/card.js";
 
 runBoardBackendContract({
   name: "InMemoryBoardBackend",
-  make: () => new InMemoryBoardBackend(["spec", "dev", "test", "done"], ["done"]),
+  make: () => new InMemoryBoardBackend(["done"]),
   seed: (b, card) => (b as InMemoryBoardBackend).seed(card),
   card: (over) => makeCanonicalCard(over),
 });

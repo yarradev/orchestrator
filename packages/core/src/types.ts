@@ -33,6 +33,10 @@ export interface BackendCapabilities {
   milestones: boolean;
 }
 
+// Key asymmetry: free-form `note` carries an explicit idempotency `key` (caller-chosen, opaque to
+// the backend). Structured governance ops (when added — setOverlay, veto, etc.) derive their dedup
+// key from identifying fields (e.g. overlay+card, role+card) so backends dedup them consistently
+// without requiring callers to mint and track extra keys.
 export type Op =
   | { kind: "claim"; role: string; epoch: number; ttlS: number }
   | { kind: "clearLease"; epoch: number }
