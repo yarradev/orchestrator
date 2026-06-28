@@ -97,6 +97,34 @@ export class InMemoryBoardBackend implements BoardBackend {
           results.push({ op, outcome: "committed" });
           break;
         }
+        case "close": {
+          if (c.stage !== op.from) { results.push({ op, outcome: "fenced", reason: `stage ${c.stage} != ${op.from}` }); break; }
+          c.state = "closed";
+          results.push({ op, outcome: "committed" });
+          break;
+        }
+        case "ask": {
+          const scopedKey = `${c.id} ${op.key}`;
+          if (!this.appendedKeys.has(scopedKey)) {
+            this.appendedKeys.add(scopedKey);
+            const list = this.notesById.get(c.id) ?? [];
+            list.push(op.body);
+            this.notesById.set(c.id, list);
+          }
+          results.push({ op, outcome: "committed" });
+          break;
+        }
+        case "linkPR": {
+          c.pr = { number: op.number, head: op.head, files: c.pr?.files ?? [] };
+          results.push({ op, outcome: "committed" });
+          break;
+        }
+        case "pushHead": {
+          if (!c.pr) { results.push({ op, outcome: "failed", reason: "no PR linked" }); break; }
+          c.pr.head = op.head;
+          results.push({ op, outcome: "committed" });
+          break;
+        }
         default:
           results.push({ op, outcome: "unsupported", reason: `unhandled op ${op.kind}` });
       }

@@ -20,3 +20,32 @@ describe("InMemoryBoardBackend setOverlay (P2a)", () => {
     expect((await be.readCard(ref("c1"))).overlays).toEqual([]);
   });
 });
+
+describe("InMemoryBoardBackend close/ask/linkPR/pushHead (P2a)", () => {
+  it("close moves state to closed with a from-guard", async () => {
+    const be = new InMemoryBoardBackend(["done"]);
+    be.seed(makeCanonicalCard({ id: "c3", stage: "testing" }));
+    const bad = await be.applyOps(ref("c3"), [{ kind: "close", from: "development", reason: "x" }], fence);
+    expect(bad.results[0]!.outcome).toBe("fenced"); // stage testing != from development
+    const ok = await be.applyOps({ id: "c3", stage: "testing", type: "story" }, [{ kind: "close", from: "testing", reason: "done" }], fence);
+    expect(ok.ok).toBe(true);
+    expect((await be.readCard(ref("c3"))).state).toBe("closed");
+  });
+
+  it("ask dedupes by key like note", async () => {
+    const be = new InMemoryBoardBackend(["done"]);
+    be.seed(makeCanonicalCard({ id: "c4", stage: "design" }));
+    await be.applyOps(ref("c4"), [{ kind: "ask", category: "product", body: "q?", key: "k1" }], fence);
+    await be.applyOps(ref("c4"), [{ kind: "ask", category: "product", body: "q?", key: "k1" }], fence);
+    expect(be.noteCount("c4")).toBe(1);
+  });
+
+  it("linkPR then pushHead update the PR", async () => {
+    const be = new InMemoryBoardBackend(["done"]);
+    be.seed(makeCanonicalCard({ id: "c5", stage: "development" }));
+    await be.applyOps(ref("c5"), [{ kind: "linkPR", number: 7, head: "aaa", repo: "o/n" }], fence);
+    expect((await be.readCard(ref("c5"))).pr).toEqual({ number: 7, head: "aaa", files: [] });
+    await be.applyOps(ref("c5"), [{ kind: "pushHead", head: "bbb" }], fence);
+    expect((await be.readCard(ref("c5"))).pr?.head).toBe("bbb");
+  });
+});
