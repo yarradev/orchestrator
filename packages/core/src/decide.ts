@@ -113,6 +113,6 @@ export function decide(c: CanonicalCard, lc: LifecycleConfig, nowMs: number): De
     return mk("noop", "worker holds a valid lease; awaiting output");
   }
 
-  // Branches added in precedence order by Tasks 2-9. Until then, a non-terminal stage is a no-op.
-  return mk("noop", `no decision branch matched for stage ${c.stage}`);
+  // No lease, not terminal, nothing pending → spawn the stage owner (judgement, or mechanical with no PR yet).
+  return dispatchOwner(c, lc, st, "spawn", `spawn ${st.ownerRole} for stage:${c.stage}`);
 }
