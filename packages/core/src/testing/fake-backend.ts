@@ -90,6 +90,13 @@ export class InMemoryBoardBackend implements BoardBackend {
           results.push({ op, outcome: "committed" });
           break;
         }
+        case "setOverlay": {
+          const has = c.overlays.includes(op.overlay);
+          if (op.on && !has) c.overlays.push(op.overlay);
+          else if (!op.on && has) c.overlays = c.overlays.filter((o) => o !== op.overlay);
+          results.push({ op, outcome: "committed" });
+          break;
+        }
         default:
           results.push({ op, outcome: "unsupported", reason: `unhandled op ${op.kind}` });
       }
