@@ -1,0 +1,5 @@
+node_modules
+dist
+*.tsbuildinfo
+.claude-plugin/local
+skills/**/config/board.json

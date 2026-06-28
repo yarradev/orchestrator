@@ -1,0 +1,8 @@
+{
+  "name": "@yarradev/core",
+  "version": "0.4.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": { ".": "./src/index.ts", "./testing": "./src/testing/index.ts" },
+  "license": "Apache-2.0"
+}

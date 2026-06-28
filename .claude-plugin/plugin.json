@@ -1,0 +1,7 @@
+{
+  "name": "yarradev",
+  "version": "0.4.0",
+  "description": "Open-source agentic-SDLC orchestrator with a pluggable board backend (GitHub by default; yarradev.ai platform on subscription).",
+  "author": { "name": "Yarra Systems" },
+  "license": "Apache-2.0"
+}

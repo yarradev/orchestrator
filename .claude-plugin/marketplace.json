@@ -1,0 +1,7 @@
+{
+  "name": "yarradev",
+  "owner": { "name": "Yarra Systems" },
+  "plugins": [
+    { "name": "yarradev", "source": "./", "description": "Agentic-SDLC orchestrator (pluggable board backend)." }
+  ]
+}
