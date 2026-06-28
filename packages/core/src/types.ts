@@ -3,6 +3,8 @@ export type Overlay = "agent-running" | "blocked" | "veto-held" | "hold-open" | 
 
 export interface BlockingQuestion { category: string; answered: boolean; deadlinePassed: boolean; answerPending: boolean; }
 
+export interface AdvisorState { vetoOpen: boolean; holdOpen: boolean; reviewedHead?: string; vetoEver?: boolean; holdEscalated?: boolean; }
+
 export interface Lease { epoch: number; holder: string; role: string; expiresAt: number; }
 
 export interface CanonicalCard {
@@ -14,7 +16,7 @@ export interface CanonicalCard {
   lease: Lease | null;
   checks: { ci: GateStatus; staging?: GateStatus };
   pr: { number: number; head: string; files: string[] } | null;
-  advisors: Record<string, { vetoOpen: boolean; holdOpen: boolean; reviewedHead?: string }>;
+  advisors: Record<string, AdvisorState>;
   counters: { transitions: number; bounces: Record<string, number> };
   malformed?: string[]; // non-empty ⇒ card is malformed; never advances (fail-closed escalate)
   questions: { open: number; blocking?: BlockingQuestion | null };

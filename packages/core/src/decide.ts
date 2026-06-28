@@ -42,11 +42,23 @@ export function decide(c: CanonicalCard, lc: LifecycleConfig, nowMs: number): De
       return escalate(c, `bounce limit exceeded on ${edge} (${b.bounces[edge]}/${lc.budgets.bounceLimit})`);
   }
 
+  const advs = Object.values(c.advisors);
+  if (c.overlays.includes("veto-held") && !advs.some((a) => a.vetoOpen || a.vetoEver))
+    return escalate(c, "board drift: veto:held overlay but no [VETO] was ever posted");
+  if (c.overlays.includes("blocked") && !c.questions.blocking)
+    return escalate(c, "board drift: blocked overlay but no open QUESTION (would park forever)");
+
   if (c.overlays.includes("blocked")) {
     const bq = c.questions.blocking;
     if (bq?.answerPending) return mk("unblock", "answer received; resuming owner", [{ kind: "setOverlay", overlay: "blocked", on: false }]);
     if (bq?.deadlinePassed) return escalate(c, "decision deadline passed while blocked");
     return mk("noop", "parked: blocked awaiting input");
+  }
+
+  if (c.overlays.includes("veto-held")) {
+    if (!advs.some((a) => a.vetoOpen))
+      return mk("veto-clear", "security VETO cleared by accountable human; resuming", [{ kind: "setOverlay", overlay: "veto-held", on: false }]);
+    return mk("noop", "parked: held by security VETO awaiting accountable CLEAR");
   }
 
   if (c.questions.blocking && !c.questions.blocking.answered) {

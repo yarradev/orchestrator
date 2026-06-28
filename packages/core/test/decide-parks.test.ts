@@ -25,3 +25,26 @@ describe("decide blocked park + block (P2b-1 T4)", () => {
     expect(d.action).toBe("noop");
   });
 });
+
+describe("decide veto-held + drift (P2b-1 T5)", () => {
+  const adv = (o: object) => ({ "security-advisor": { vetoOpen: false, holdOpen: false, ...o } });
+  it("clears a veto-held card once the veto is gone (case 30)", () => {
+    const d = decide(card({ stage: "development", overlays: ["veto-held"], advisors: adv({ vetoEver: true }) }), LC, NOW);
+    expect(d.action).toBe("veto-clear");
+    expect(d.ops.some((o) => o.kind === "setOverlay" && o.overlay === "veto-held" && !o.on)).toBe(true);
+  });
+  it("noops a still-vetoed card (case 29)", () => {
+    const d = decide(card({ stage: "development", overlays: ["veto-held"], advisors: adv({ vetoOpen: true, vetoEver: true }) }), LC, NOW);
+    expect(d.action).toBe("noop");
+  });
+  it("escalates veto-held drift: overlay but no veto ever (case 46)", () => {
+    const d = decide(card({ stage: "development", overlays: ["veto-held"], advisors: {} }), LC, NOW);
+    expect(d.action).toBe("escalate");
+    expect(d.reason).toMatch(/drift/);
+  });
+  it("escalates blocked drift: overlay but no question (case 47)", () => {
+    const d = decide(card({ stage: "development", overlays: ["blocked"] }), LC, NOW);
+    expect(d.action).toBe("escalate");
+    expect(d.reason).toMatch(/drift/);
+  });
+});
