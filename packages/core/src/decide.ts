@@ -108,6 +108,11 @@ export function decide(c: CanonicalCard, lc: LifecycleConfig, nowMs: number): De
     return mk("noop", `required check ${st.advanceOn} absent (fail-closed)`);
   }
 
+  if (c.lease) {
+    if (leaseExpired(c, lc, nowMs)) return dispatchOwner(c, lc, st, "reclaim", `lease expired (epoch ${currentEpoch(c)}); bump epoch + re-spawn`);
+    return mk("noop", "worker holds a valid lease; awaiting output");
+  }
+
   // Branches added in precedence order by Tasks 2-9. Until then, a non-terminal stage is a no-op.
   return mk("noop", `no decision branch matched for stage ${c.stage}`);
 }
