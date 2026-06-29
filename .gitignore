@@ -6,3 +6,4 @@ skills/**/config/board.json
 
 # SDD scratch (briefs/reports/ledger)
 .superpowers/
+graphify-out/
