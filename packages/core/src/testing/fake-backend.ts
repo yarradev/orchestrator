@@ -122,8 +122,36 @@ export class InMemoryBoardBackend implements BoardBackend {
           results.push({ op, outcome: "committed" });
           break;
         }
-        default:
-          results.push({ op, outcome: "unsupported", reason: `unhandled op ${op.kind}` });
+        case "veto": {
+          const prev = c.advisors[op.role] ?? { vetoOpen: false, holdOpen: false };
+          c.advisors[op.role] = { ...prev, vetoOpen: true, vetoEver: true, reviewedHead: op.head };
+          results.push({ op, outcome: "committed" });
+          break;
+        }
+        case "hold": {
+          const prev = c.advisors[op.role] ?? { vetoOpen: false, holdOpen: false };
+          c.advisors[op.role] = { ...prev, holdOpen: true, reviewedHead: op.head };
+          results.push({ op, outcome: "committed" });
+          break;
+        }
+        case "clearVeto": {
+          const prev = c.advisors[op.role] ?? { vetoOpen: false, holdOpen: false };
+          c.advisors[op.role] = { ...prev, vetoOpen: false };
+          results.push({ op, outcome: "committed" });
+          break;
+        }
+        case "recordReview": {
+          const prev = c.advisors[op.role] ?? { vetoOpen: false, holdOpen: false };
+          c.advisors[op.role] = { ...prev, reviewedHead: op.head };
+          results.push({ op, outcome: "committed" });
+          break;
+        }
+        default: {
+          // Safety net for future Op variants; op is `never` here (exhaustive switch)
+          const anyOp = op as { kind: string };
+          results.push({ op, outcome: "unsupported", reason: `unhandled op ${anyOp.kind}` });
+          break;
+        }
       }
     }
     return { ok: results.every((r) => r.outcome === "committed"), results };
