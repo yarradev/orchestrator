@@ -1,8 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { decide } from "../src/decide.js";
+import type { BlockingQuestion, AdvisorState } from "../src/types.js";
 import { LC, NOW, card } from "./fixtures/lifecycle.js";
 
-const q = (o: object) => ({ open: 1, blocking: { category: "product", answered: false, deadlinePassed: false, answerPending: false, ...o } });
+const q = (o: Partial<BlockingQuestion>) => ({ open: 1, blocking: { category: "product", answered: false, deadlinePassed: false, answerPending: false, ...o } });
 
 describe("decide blocked park + block (P2b-1 T4)", () => {
   it("blocks an open unanswered question (case 11)", () => {
@@ -27,7 +28,7 @@ describe("decide blocked park + block (P2b-1 T4)", () => {
 });
 
 describe("decide veto-held + drift (P2b-1 T5)", () => {
-  const adv = (o: object) => ({ "security-advisor": { vetoOpen: false, holdOpen: false, ...o } });
+  const adv = (o: Partial<AdvisorState>) => ({ "security-advisor": { vetoOpen: false, holdOpen: false, ...o } });
   it("clears a veto-held card once the veto is gone (case 30)", () => {
     const d = decide(card({ stage: "development", overlays: ["veto-held"], advisors: adv({ vetoEver: true }) }), LC, NOW);
     expect(d.action).toBe("veto-clear");

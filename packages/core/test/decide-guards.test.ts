@@ -27,3 +27,15 @@ describe("decide budgets (P2b-1 T3, corpus cases 14,15)", () => {
     expect(decide(c, LC, NOW)).toMatchObject({ action: "escalate", reason: expect.stringMatching(/bounce limit/) });
   });
 });
+
+describe("decide escalate lease handling (P2b-2 carryover)", () => {
+  it("clears the lease when escalating an agent-running card", () => {
+    const d = decide(card({ stage: "design", overlays: ["agent-running"], malformed: ["bad"] }), LC, NOW);
+    expect(d.action).toBe("escalate");
+    expect(d.ops.some((o) => o.kind === "clearLease")).toBe(true);
+  });
+  it("does not clear a lease when escalating a card with no agent running", () => {
+    const d = decide(card({ stage: "design", malformed: ["bad"] }), LC, NOW);
+    expect(d.ops.some((o) => o.kind === "clearLease")).toBe(false);
+  });
+});

@@ -40,6 +40,7 @@ const DEFAULT_RESPAWN_LIMIT = 3;
 const CHECK_SYNONYMS: Record<string, string> = { ci_green: "ci", tests_green: "tests" };
 
 const finiteOr = (v: unknown, fallback: number): number => {
+  if (v == null) return fallback; // Number(null) === 0 (finite) would otherwise mean "escalate everything"
   const n = Number(v);
   return Number.isFinite(n) ? n : fallback;
 };

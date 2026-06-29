@@ -1,8 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { decide } from "../src/decide.js";
+import type { CanonicalCard } from "../src/types.js";
 import { LC, NOW, card } from "./fixtures/lifecycle.js";
 
-const prCard = (o: object) => card({ stage: "development", pr: { number: 9, head: "abc", files: [] }, ...o });
+const prCard = (o: Partial<CanonicalCard>) => card({ stage: "development", pr: { number: 9, head: "abc", files: [] }, ...o });
 
 describe("decide mechanical CI gate (P2b-1 T7)", () => {
   it("advances on green CI with a PR (case 5)", () => {

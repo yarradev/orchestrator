@@ -10,6 +10,7 @@ describe("decide dispatch owner (P2b-1 T9)", () => {
   });
   it("spawns the developer for a mechanical stage with no PR yet (case 44)", () => {
     const d = decide(card({ stage: "development", epoch: 1, pr: null }), LC, NOW);
+    expect(d.action).toBe("spawn");
     expect(d.dispatch).toMatchObject({ role: "developer", mode: "mechanical", respawn: false });
   });
   it("uses the durable epoch high-water after a clean release (case 18 → claim @2)", () => {

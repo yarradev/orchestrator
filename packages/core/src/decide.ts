@@ -152,7 +152,7 @@ export function decide(c: CanonicalCard, lc: LifecycleConfig, nowMs: number, pol
   }
 
   if (c.questions.blocking && !c.questions.blocking.answered) {
-    const cat = c.questions.blocking.category || "product";
+    const cat = c.questions.blocking.category;
     const ops: Op[] = [
       { kind: "setOverlay", overlay: "blocked", on: true },
       ...clearLeaseIfRunning(c),

@@ -1,8 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { decide } from "../src/decide.js";
+import type { CanonicalCard } from "../src/types.js";
 import { LC, NOW, card } from "./fixtures/lifecycle.js";
 
-const epic = (o: object) => card({ type: "epic", stage: "integrating", ...o });
+const epic = (o: Partial<CanonicalCard>) => card({ type: "epic", stage: "integrating", ...o });
 
 describe("decide epic fan-in barrier (P2b-1 T6)", () => {
   it("advances when all children are done (case 36)", () => {
