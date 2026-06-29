@@ -1,6 +1,6 @@
 import type { CanonicalCard, Op, Verdict } from "./types.js";
 import type { LifecycleConfig, StageDef } from "./config.js";
-import { escalateOps, advanceOps, currentEpoch } from "./decide.js";
+import { escalateOps, advanceOps, currentEpoch, keyFor } from "./decide.js";
 
 // reduceVerdict — the post-dispatch half of the decision brain. Maps a dispatched agent's in-band Verdict
 // to the backend Op[] that records its outcome. Pure: no I/O, no clock. This is where eval-gates' retired
@@ -23,6 +23,19 @@ export function reduceVerdict(c: CanonicalCard, v: Verdict, lc: LifecycleConfig)
         { kind: "clearLease", epoch: currentEpoch(c) },
       ];
     }
+    case "submitted": {
+      const ev = v.evidence;
+      const link: Op = c.pr == null
+        ? { kind: "linkPR", number: ev.prNumber, head: ev.head, repo: ev.repo }
+        : { kind: "pushHead", head: ev.head };
+      return [link, { kind: "clearLease", epoch: currentEpoch(c) }];
+    }
+    case "question":
+      return [
+        { kind: "setOverlay", overlay: "blocked", on: true },
+        { kind: "ask", category: v.category, body: `Blocking question (cat:${v.category}) needs an answer.`, key: keyFor(c, "ask") },
+        { kind: "clearLease", epoch: currentEpoch(c) },
+      ];
     case "error":
       return escalateOps(c, `worker error: ${v.reason ?? "unspecified"}`);
     default:
