@@ -1,5 +1,5 @@
 import type { CanonicalCard, Decision, Op } from "./types.js";
-import type { LifecycleConfig, StageDef } from "./config.js";
+import type { LifecycleConfig, StageDef, TeamPolicy } from "./config.js";
 
 const GATE_KEY: Record<string, "ci" | "tests" | "staging"> = { ci_green: "ci", ci: "ci", tests_green: "tests", tests: "tests", staging: "staging" };
 
@@ -52,7 +52,72 @@ function dispatchOwner(c: CanonicalCard, lc: LifecycleConfig, st: StageDef, acti
   return mk(action, reason, [{ kind: "claim", role: st.ownerRole!, epoch, ttlS: lc.lease.ttlSeconds }], { role: st.ownerRole!, epoch, mode, respawn });
 }
 
-export function decide(c: CanonicalCard, lc: LifecycleConfig, nowMs: number): Decision {
+// Minimal glob → RegExp (supports **, *, ?) for advisor watch_paths. Case-INSENSITIVE: real filenames are
+// often CamelCase and a security diff-hook must not miss them. Ported from v1 eval-gates.js (the 'i' flag is load-bearing).
+export function globToRegExp(glob: string): RegExp {
+  let re = "";
+  for (let i = 0; i < glob.length; i++) {
+    const ch = glob[i]!;
+    if (ch === "*") {
+      if (glob[i + 1] === "*") { re += ".*"; i++; if (glob[i + 1] === "/") i++; }
+      else re += "[^/]*";
+    } else if (ch === "?") re += "[^/]";
+    else if (".+^${}()|[]\\".includes(ch)) re += "\\" + ch;
+    else re += ch;
+  }
+  return new RegExp("^" + re + "$", "i");
+}
+
+export function watchMatch(files: string[], patterns: string[]): boolean {
+  if (!files.length || !patterns.length) return false;
+  const res = patterns.map(globToRegExp);
+  return files.some((f) => res.some((r) => r.test(f)));
+}
+
+// Advisor watch-paths gate (§A5), run on the mechanical success leg BEFORE advanceForward. Returns a Decision
+// to override the advance (dispatch/park/escalate), or null to allow it. An open VETO/HOLD is honored
+// regardless of the PR's CURRENT files (a later commit can drift them below watch_paths). The advisor verdict
+// sets the flag (reduceVerdict); this gate sets the veto-held overlay / escalates @human (escalate-once via the
+// keyed note). DEFERRED (documented): gh#39 content scanners, gh#32 clear_authority breadcrumb, gh#25 advisorMiss,
+// gh#56 re-review reason suffix, and a clearHold op / hold-open overlay lifecycle.
+function advisorGate(c: CanonicalCard, lc: LifecycleConfig, policy: TeamPolicy, nowMs: number): Decision | null {
+  const adv = policy.advisors.find((a) => a.joinsAt.includes(c.stage));
+  if (!adv) return null;
+  const ast = c.advisors[adv.role];
+  const vetoOpen = ast?.vetoOpen ?? false;
+  const holdOpen = ast?.holdOpen ?? false;
+  const watchMatched = watchMatch(c.pr?.files ?? [], adv.watchPaths);
+  if (!vetoOpen && !holdOpen && !watchMatched) return null; // advisor not engaged → allow advance
+
+  if (vetoOpen) {
+    return mk("block", `${adv.role} VETO open — needs accountable CLEAR`, [
+      { kind: "setOverlay", overlay: "veto-held", on: true },
+      ...clearLeaseIfRunning(c),
+      { kind: "note", body: `ESCALATE @human: Security VETO on #${c.id} must be CLEARed by an accountable human before merge.`, key: keyFor(c, "veto-hold") },
+    ]);
+  }
+  if (holdOpen) {
+    return mk("block", `${adv.role} HOLD open — escalated @human, awaiting CLEAR/ACK`, [
+      ...clearLeaseIfRunning(c),
+      { kind: "note", body: `ESCALATE @human: Security HOLD on #${c.id}: a human compliance sign-off (CLEAR/ACK) is required before this advances.`, key: keyFor(c, "hold") },
+    ]);
+  }
+
+  let reReview = false;
+  if (ast?.reviewedHead) {
+    if (c.pr && c.pr.head.indexOf(ast.reviewedHead) === 0) return null; // reviewed THIS head → allow advance
+    reReview = true; // head moved past the reviewed sha → re-dispatch
+  }
+  if (c.lease && c.lease.role === adv.role && !leaseExpired(c, lc, nowMs)) return mk("noop", `${adv.role} reviewing (lease held)`);
+
+  const epoch = currentEpoch(c) + 1;
+  const reason = reReview
+    ? `re-dispatch ${adv.role}: PR head moved past reviewed sha:${ast?.reviewedHead}`
+    : `dispatch ${adv.role} (watch_paths match)`;
+  return mk("spawn", reason, [{ kind: "claim", role: adv.role, epoch, ttlS: lc.lease.ttlSeconds }], { role: adv.role, epoch, mode: "judgement", respawn: false });
+}
+
+export function decide(c: CanonicalCard, lc: LifecycleConfig, nowMs: number, policy: TeamPolicy = { advisors: [] }): Decision {
   const stagesCfg = c.type === "epic" ? (lc.epicStages ?? {}) : lc.stages;
   const st: StageDef | undefined = stagesCfg[c.stage];
   if (!st) return mk("escalate", `unknown ${c.type} stage: ${c.stage}`);
@@ -105,7 +170,11 @@ export function decide(c: CanonicalCard, lc: LifecycleConfig, nowMs: number): De
 
   if (st.gate === "mechanical" && c.pr) {
     const g = c.checks[GATE_KEY[st.advanceOn ?? "ci"] ?? "ci"] ?? "absent";
-    if (g === "success") return advanceForward(c, st, stagesCfg, `mechanical gate ${st.advanceOn}=success`);
+    if (g === "success") {
+      const gate = advisorGate(c, lc, policy, nowMs);
+      if (gate) return gate;
+      return advanceForward(c, st, stagesCfg, `mechanical gate ${st.advanceOn}=success`);
+    }
     if (g === "pending") return mk("noop", `${st.advanceOn} pending`);
     if (g === "failure") {
       if (c.lease && !leaseExpired(c, lc, nowMs)) return mk("noop", `${st.advanceOn} failed; worker still holds lease`);
