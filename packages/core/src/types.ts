@@ -64,6 +64,20 @@ export interface OpResult { op: Op; outcome: OpOutcome; reason?: string; }
 export interface ApplyResult { ok: boolean; results: OpResult[]; }
 export interface Fence { epoch: number; holder: string; }
 
+// The in-band outcome a dispatched agent returns (P2c parses it from a fenced JSON block; reduceVerdict
+// maps it to backend ops). Worker verdicts: advance/reject/submitted/question/error. Advisor verdicts:
+// veto/hold/advice/clean (each echoes the head it reviewed).
+export type Verdict =
+  | { status: "advance"; to?: string; reason?: string }
+  | { status: "reject"; to?: string; reason?: string }
+  | { status: "submitted"; evidence: { repo: string; prNumber: number; head: string }; reason?: string }
+  | { status: "question"; category: string; reason?: string }
+  | { status: "error"; reason?: string }
+  | { status: "veto"; role: string; head: string; reason?: string }
+  | { status: "hold"; role: string; head: string; reason?: string }
+  | { status: "advice"; role: string; head: string; reason?: string }
+  | { status: "clean"; role: string; head: string; reason?: string };
+
 // The pure output of decide() (P2b). Either backend ops to apply, or a dispatch instruction telling the
 // loop to run a role-agent and feed its verdict to reduceVerdict. A dispatch always carries its claim in ops.
 export interface Decision {

@@ -19,23 +19,30 @@ const mk = (action: Decision["action"], reason: string, ops: Op[] = [], dispatch
 const clearLeaseIfRunning = (c: CanonicalCard): Op[] =>
   c.overlays.includes("agent-running") ? [{ kind: "clearLease", epoch: currentEpoch(c) }] : [];
 
-function escalate(c: CanonicalCard, reason: string): Decision {
-  const ops: Op[] = [
+export function escalateOps(c: CanonicalCard, reason: string): Op[] {
+  return [
     { kind: "note", body: `ESCALATE @human: ${reason}`, key: keyFor(c, "escalate") },
     { kind: "setOverlay", overlay: "escalated", on: true },
+    ...clearLeaseIfRunning(c),
   ];
-  if (c.overlays.includes("agent-running")) ops.push({ kind: "clearLease", epoch: currentEpoch(c) });
-  return mk("escalate", reason, ops);
 }
 
-function advanceForward(c: CanonicalCard, st: StageDef, stagesCfg: Record<string, StageDef>, reason: string): Decision {
+function escalate(c: CanonicalCard, reason: string): Decision {
+  return mk("escalate", reason, escalateOps(c, reason));
+}
+
+export function advanceOps(c: CanonicalCard, st: StageDef, stagesCfg: Record<string, StageDef>): Op[] {
   const to = st.next!;
   const ops: Op[] = [
     { kind: "setStage", from: c.stage, to, epoch: currentEpoch(c) },
     { kind: "clearLease", epoch: currentEpoch(c) },
   ];
   if (stagesCfg[to]?.terminal) ops.push({ kind: "close", from: c.stage, reason: "completed" });
-  return mk("advance", reason, ops);
+  return ops;
+}
+
+function advanceForward(c: CanonicalCard, st: StageDef, stagesCfg: Record<string, StageDef>, reason: string): Decision {
+  return mk("advance", reason, advanceOps(c, st, stagesCfg));
 }
 
 function dispatchOwner(c: CanonicalCard, lc: LifecycleConfig, st: StageDef, action: "spawn" | "reclaim", reason: string): Decision {
