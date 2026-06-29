@@ -55,6 +55,7 @@ export type Op =
   | { kind: "veto"; role: string; head: string; reason: string }
   | { kind: "hold"; role: string; head: string; reason: string }
   | { kind: "clearVeto"; role: string }
+  | { kind: "recordReview"; role: string; head: string }
   | { kind: "linkPR"; number: number; head: string; repo: string }
   | { kind: "pushHead"; head: string }
   | { kind: "close"; from: string; reason: string };

@@ -38,7 +38,20 @@ export function reduceVerdict(c: CanonicalCard, v: Verdict, lc: LifecycleConfig)
       ];
     case "error":
       return escalateOps(c, `worker error: ${v.reason ?? "unspecified"}`);
-    default:
-      return escalateOps(c, `reduceVerdict: unhandled verdict (${v.status})`);
+    case "veto":
+      return [{ kind: "veto", role: v.role, head: v.head, reason: v.reason ?? "" }];
+    case "hold":
+      return [{ kind: "hold", role: v.role, head: v.head, reason: v.reason ?? "" }];
+    case "advice":
+      return [
+        { kind: "recordReview", role: v.role, head: v.head },
+        { kind: "note", body: `ADVICE from ${v.role}: ${v.reason ?? ""}`, key: keyFor(c, `advice:${v.role}`) },
+      ];
+    case "clean":
+      return [{ kind: "recordReview", role: v.role, head: v.head }];
+    default: {
+      const _exhaustive: never = v;
+      return escalateOps(c, `reduceVerdict: unhandled verdict (${(_exhaustive as { status: string }).status})`);
+    }
   }
 }
