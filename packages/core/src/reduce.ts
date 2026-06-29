@@ -1,6 +1,6 @@
 import type { CanonicalCard, Op, Verdict } from "./types.js";
 import type { LifecycleConfig, StageDef } from "./config.js";
-import { escalateOps, advanceOps } from "./decide.js";
+import { escalateOps, advanceOps, currentEpoch } from "./decide.js";
 
 // reduceVerdict — the post-dispatch half of the decision brain. Maps a dispatched agent's in-band Verdict
 // to the backend Op[] that records its outcome. Pure: no I/O, no clock. This is where eval-gates' retired
@@ -14,6 +14,14 @@ export function reduceVerdict(c: CanonicalCard, v: Verdict, lc: LifecycleConfig)
       if (!st?.next) return escalateOps(c, `advance from ${c.stage} but it has no forward edge`);
       if (v.to && v.to !== st.next) return escalateOps(c, `MOVE names to-stage:${v.to} but ${c.stage}'s only forward edge is →${st.next}`);
       return advanceOps(c, st, stagesCfg);
+    }
+    case "reject": {
+      const edge = `${c.stage}->${v.to}`;
+      if (!v.to || !lc.backwardEdges[edge]) return escalateOps(c, `REJECT on undefined backward edge ${c.stage}->${v.to ?? "?"}`);
+      return [
+        { kind: "reject", from: c.stage, to: v.to, epoch: currentEpoch(c), edge },
+        { kind: "clearLease", epoch: currentEpoch(c) },
+      ];
     }
     case "error":
       return escalateOps(c, `worker error: ${v.reason ?? "unspecified"}`);
