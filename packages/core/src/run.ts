@@ -1,7 +1,8 @@
 import type { BoardBackend } from "./backend.js";
-import type { CanonicalCard, CardRef, Decision, Fence, OpResult, Verdict } from "./types.js";
+import type { CanonicalCard, CardRef, Decision, Fence, Op, OpResult, Verdict } from "./types.js";
 import type { LifecycleConfig, TeamPolicy } from "./config.js";
 import { decide, currentEpoch } from "./decide.js";
+import { reduceVerdict } from "./reduce.js";
 
 export interface DispatchRequest {
   card: CanonicalCard;
@@ -74,13 +75,24 @@ export async function runPass(deps: RunDeps, opts: RunOptions = {}): Promise<Pas
     }
 
     if (decision.dispatch) {
-      // Task 3 fills in the live dispatch leg here. For now: apply the claim under the dispatched
-      // epoch as the fence, then stop (no dispatcher wired).
       const fence: Fence = { epoch: decision.dispatch.epoch, holder };
       const claimRes = await backend.applyOps(ref, decision.ops, fence);
       out.applied.push(...claimRes.results);
       if (!claimRes.ok) { out.note = "claim lost"; outcomes.push(out); continue; }
-      out.note = "no dispatcher configured";
+      if (!deps.dispatcher) { out.note = "no dispatcher configured"; outcomes.push(out); continue; }
+
+      out.dispatched = { role: decision.dispatch.role, epoch: decision.dispatch.epoch, mode: decision.dispatch.mode };
+      const verdict = await deps.dispatcher.dispatch({
+        card,
+        role: decision.dispatch.role,
+        epoch: decision.dispatch.epoch,
+        mode: decision.dispatch.mode,
+        respawn: decision.dispatch.respawn,
+      });
+      out.verdict = verdict;
+      const ops: Op[] = reduceVerdict(card, verdict, lc);   // the loop adds NO clearLease — reduceVerdict already does
+      const applyRes = await backend.applyOps(ref, ops, fence);   // fenced at the dispatched epoch
+      out.applied.push(...applyRes.results);
       outcomes.push(out);
       continue;
     }
