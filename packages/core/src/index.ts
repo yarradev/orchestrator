@@ -4,3 +4,4 @@ export type { BoardBackend } from "./backend.js";
 export * from "./config.js";
 export * from "./decide.js";
 export * from "./reduce.js";
+export * from "./verdict.js";
