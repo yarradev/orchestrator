@@ -1,7 +1,7 @@
 import type {
-  BoardBackend, CanonicalCard, CardRef, ReadyFilter, Op, Fence, ApplyResult, BackendCapabilities,
+  BoardBackend, CanonicalCard, CardRef, ReadyFilter, Op, Fence, ApplyResult, OpResult, BackendCapabilities,
 } from "@yarradev/core";
-import type { BoardClient } from "@yarradev/board-client";
+import type { BoardClient, ActInput } from "@yarradev/board-client";
 import { opToAct, appendOutcomeToOpResult, mapEnrichedToCanonical } from "./conventions.js";
 
 export class BoardAdaptor implements BoardBackend {
@@ -35,24 +35,35 @@ export class BoardAdaptor implements BoardBackend {
     const ec = await this.client.readEnriched(ref.id);
     const gen = ec.current_gen;
 
-    const acts = ops
-      .map((op) => opToAct(op, ref.id, gen))
-      .filter((a): a is NonNullable<typeof a> => a != null);
+    // Map ops → acts, tracking which ops produced an act (some map to null).
+    const indexed: { op: Op; act: ActInput | null }[] = ops.map((op) => ({ op, act: opToAct(op, ref.id, gen) }));
+    const acts = indexed.filter((e) => e.act != null).map((e) => e.act!);
 
     if (acts.length === 0) {
-      // All ops mapped to null — nothing for the board to do.
       return { ok: true, results: ops.map((op) => ({ op, outcome: "unsupported" as const, reason: "no board act mapping" })) };
     }
 
-    const results = await this.client.submitActs(acts);
+    const boardResults = await this.client.submitActs(acts);
+
+    // Map board results back to ops, preserving index alignment.
+    let ri = 0;
+    const results: OpResult[] = [];
+    for (const e of indexed) {
+      if (e.act == null) {
+        results.push({ op: e.op, outcome: "unsupported", reason: "no board act mapping" });
+      } else {
+        const br = boardResults[ri++];
+        results.push({
+          op: e.op,
+          outcome: br ? appendOutcomeToOpResult(br.outcome) : "failed",
+          reason: br?.reason,
+        });
+      }
+    }
 
     return {
-      ok: results.every((r) => r.outcome === "committed" || r.outcome === "conflict_idem"),
-      results: ops.map((op, i) => {
-        const r = results[i];
-        if (!r) return { op, outcome: "unsupported" as const, reason: "no board act mapping" };
-        return { op, outcome: appendOutcomeToOpResult(r.outcome), reason: r.reason };
-      }),
+      ok: results.every((r) => r.outcome === "committed"),
+      results,
     };
   }
 }
