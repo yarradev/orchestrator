@@ -71,7 +71,7 @@ export function mapEnrichedToCanonical(ec: EnrichedBoardCard): CanonicalCard {
     advisors: {},
     counters: { transitions: ec.transitions_count, bounces: {} },
     epoch: ec.current_gen,
-    questions: { open: ec.open_questions.length },
+    questions: { open: ec.open_questions?.length ?? 0 },
     title: ec.title ?? "",
     parentId: ec.parent_id,
   };
