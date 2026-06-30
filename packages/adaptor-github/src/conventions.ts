@@ -46,6 +46,7 @@ export const hasNote = (commentBodies: string[], key: string): boolean =>
 export interface Counters {
   transitions: number;
   bounces: Record<string, number>;
+  epoch?: number;   // durable whole-card high-water (persists past clearLease)
 }
 
 const COUNTERS_RE = /\n?<!--yd:counters=[^>]*-->/g;

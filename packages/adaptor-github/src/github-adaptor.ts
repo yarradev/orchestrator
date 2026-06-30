@@ -77,6 +77,7 @@ export class GitHubAdaptor implements BoardBackend {
       checks: { ci },
       advisors: {},
       counters: parseCounters(body),
+      epoch: parseCounters(body).epoch,
       questions: { open: overlays.includes("blocked") ? 1 : 0 },
       title: issue.title,
       parentId: null,
@@ -136,6 +137,8 @@ export class GitHubAdaptor implements BoardBackend {
               expiresAt: this.now() + op.ttlS * 1000,
             };
             work.body = setLease(work.body, lease);
+            counters.epoch = Math.max(counters.epoch ?? 0, op.epoch);
+            work.body = setCounters(work.body, counters);
             await this.api.updateBody(work.number, work.body);
             results.push({ op, outcome: "committed" });
           }

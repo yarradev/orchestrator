@@ -29,6 +29,18 @@ export function runBoardBackendContract(h: ContractHarness): void {
       expect((await b.readCard(ref("a", "test"))).stage).toBe("test");
     });
 
+    it("durable epoch high-water persists across claim→clearLease→claim (monotonic)", async () => {
+      const b = await h.make();
+      await h.seed(b, h.card({ id: "e", stage: "dev" }));
+      await b.applyOps(ref("e", "dev"), [{ kind: "claim", role: "developer", epoch: 1, ttlS: 1800 }], { epoch: 0, holder: "orch" });
+      expect((await b.readCard(ref("e", "dev"))).epoch).toBe(1);
+      await b.applyOps(ref("e", "dev"), [{ kind: "clearLease", epoch: 1 }], { epoch: 1, holder: "orch" });
+      expect((await b.readCard(ref("e", "dev"))).epoch).toBe(1);
+      await b.applyOps(ref("e", "dev"), [{ kind: "claim", role: "developer", epoch: 2, ttlS: 1800 }], { epoch: 1, holder: "orch" });
+      expect((await b.readCard(ref("e", "dev"))).epoch).toBe(2);
+    });
+
+
     it("setStage on a mismatched from is fenced (reconcile-forward signal)", async () => {
       const b = await h.make();
       await h.seed(b, h.card({ id: "a", stage: "test" }));
