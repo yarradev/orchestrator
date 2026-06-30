@@ -15,6 +15,15 @@ importers:
         specifier: ^2.1.0
         version: 2.1.9(@types/node@26.0.1)
 
+  packages/adaptor-board:
+    dependencies:
+      '@yarradev/core':
+        specifier: workspace:*
+        version: link:../core
+      '@yarrasys/board-client':
+        specifier: ^0.1.0
+        version: 0.1.0
+
   packages/adaptor-github:
     dependencies:
       '@yarradev/core':
@@ -359,6 +368,9 @@ packages:
 
   '@vitest/utils@2.1.9':
     resolution: {integrity: sha512-v0psaMSkNJ3A2NMrUEHFRzJtDPFn+/VWZ5WxImB21T9fjucJRmS7xCS3ppEnARb9y11OAzaD+P2Ps+b+BGX5iQ==}
+
+  '@yarrasys/board-client@0.1.0':
+    resolution: {integrity: sha512-bcDQsTnbWB4XFUH8G/ihm8yiDHojTQEaapOEo4VKlRAqQbcXBT5yuMLky5eW2mx7+SdovHrggZMkrH5RMG7cxg==, tarball: https://npm.pkg.github.com/download/@yarrasys/board-client/0.1.0/a11119eb1a5c998420d647c95b17944a4ecadde5}
 
   assertion-error@2.0.1:
     resolution: {integrity: sha512-Izi8RQcffqCeNVgFigKli1ssklIbpHnCYc6AknXGYoB6grJqyeby7jv12JUQgmTAnIDnbck1uxksT4dzN3PWBA==}
@@ -740,6 +752,8 @@ snapshots:
       '@vitest/pretty-format': 2.1.9
       loupe: 3.2.1
       tinyrainbow: 1.2.0
+
+  '@yarrasys/board-client@0.1.0': {}
 
   assertion-error@2.0.1: {}
 

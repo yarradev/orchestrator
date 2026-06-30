@@ -1,2 +1,4 @@
 packages:
   - "packages/*"
+minimumReleaseAgeExclude:
+  - '@yarrasys/board-client@0.1.0'

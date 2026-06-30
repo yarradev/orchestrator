@@ -6,6 +6,6 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@yarradev/core": "workspace:*",
-    "@yarrasys/board-client": "file:../../../../yarradev-platform/packages/board-client"
+    "@yarrasys/board-client": "^0.1.0"
   }
 }
