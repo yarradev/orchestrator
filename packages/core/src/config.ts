@@ -97,7 +97,18 @@ export function loadLifecycle(json: unknown): LifecycleConfig {
     const e = asRecord(v, `backward_edges.${k}`);
     cfg.backwardEdges[k] = { from: String(e.from), to: String(e.to) };
   }
+
+  validateDispatchable(cfg.stages, "stages");
+  if (cfg.epicStages) validateDispatchable(cfg.epicStages, "epic_stages");
+
   return cfg;
+}
+
+function validateDispatchable(stages: Record<string, StageDef>, where: string): void {
+  for (const [k, st] of Object.entries(stages)) {
+    if (st.terminal || st.gate === "barrier" || st.gate === "human") continue;
+    if (!st.ownerRole) throw new Error(`loadLifecycle: ${where} stage '${k}' (gate:${st.gate ?? "judgement"}) needs owner_role — dispatchable stages must name an owner`);
+  }
 }
 
 export interface AdvisorPolicy {
@@ -128,4 +139,17 @@ export function loadTeamPolicy(json: unknown): TeamPolicy {
     return out;
   });
   return { advisors };
+}
+
+// The advisor watch-paths gate runs ONLY on the mechanical success leg (decide()). An advisor whose
+// joins_at stages are all non-mechanical never fires — surface that as a startup warning (the CLI prints it).
+export function inertAdvisorWarnings(lc: LifecycleConfig, policy: TeamPolicy): string[] {
+  const isMechanical = (s: string): boolean => lc.stages[s]?.gate === "mechanical" || lc.epicStages?.[s]?.gate === "mechanical";
+  const warns: string[] = [];
+  for (const adv of policy.advisors) {
+    if (!adv.joinsAt.some(isMechanical)) {
+      warns.push(`advisor '${adv.role}' joins_at [${adv.joinsAt.join(", ")}] but none of those stages is mechanical — the advisor gate runs only on the mechanical success leg, so this advisor is inert.`);
+    }
+  }
+  return warns;
 }
