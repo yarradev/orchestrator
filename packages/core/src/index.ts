@@ -5,3 +5,4 @@ export * from "./config.js";
 export * from "./decide.js";
 export * from "./reduce.js";
 export * from "./verdict.js";
+export * from "./run.js";
