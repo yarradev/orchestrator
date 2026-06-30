@@ -25,6 +25,19 @@ importers:
         specifier: ^26.0.1
         version: 26.0.1
 
+  packages/cli:
+    dependencies:
+      '@yarradev/adaptor-github':
+        specifier: workspace:*
+        version: link:../adaptor-github
+      '@yarradev/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@types/node':
+        specifier: ^26.0.1
+        version: 26.0.1
+
   packages/core:
     dependencies:
       vitest:

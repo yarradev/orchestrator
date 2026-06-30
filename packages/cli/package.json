@@ -1,0 +1,15 @@
+{
+  "name": "@yarradev/cli",
+  "version": "0.4.0",
+  "type": "module",
+  "main": "./src/cli.ts",
+  "bin": { "yarradev": "./dist/main.js" },
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@yarradev/core": "workspace:*",
+    "@yarradev/adaptor-github": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^26.0.1"
+  }
+}
