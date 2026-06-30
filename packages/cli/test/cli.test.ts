@@ -58,4 +58,18 @@ describe("yarradev CLI deterministic commands (P2c T7)", () => {
     const h = harness();
     expect(await run(["frobnicate"], {}, h.io, h.deps)).toBe(2);
   });
+  it("run-pass --dry-run reports decisions and writes nothing", async () => {
+    const h = harness();
+    const code = await run(["run-pass", "--dry-run"], {}, h.io, h.deps);
+    expect(code).toBe(0);
+    const report = JSON.parse(h.lines.join("\n"));
+    expect(report.outcomes[0]).toMatchObject({ action: "spawn", note: "dry-run" });
+    expect((await h.backend.readCard({ id: "1", stage: "design", type: "story" })).lease).toBeNull();
+  });
+  it("run-pass without --dry-run is refused (exit 2) pointing at the skill", async () => {
+    const h = harness();
+    const code = await run(["run-pass"], {}, h.io, h.deps);
+    expect(code).toBe(2);
+    expect(h.errs.join("\n")).toMatch(/--dry-run/);
+  });
 });

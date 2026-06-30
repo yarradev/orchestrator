@@ -1,0 +1,5 @@
+{
+  "advisors": [
+    { "role": "security", "authority": "veto", "joins_at": ["development"], "watch_paths": ["**/auth*", "**/*secret*", "**/crypto/**"] }
+  ]
+}

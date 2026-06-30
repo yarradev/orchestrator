@@ -1,5 +1,5 @@
-import type { BoardBackend } from "@yarradev/core";
-import { decide, reduceVerdict } from "@yarradev/core";
+import type { BoardBackend, PassReport } from "@yarradev/core";
+import { decide, reduceVerdict, runPass, inertAdvisorWarnings } from "@yarradev/core";
 import { selectBackend } from "./backend-factory.js";
 import { loadConfigs, type Configs } from "./config-io.js";
 
@@ -43,6 +43,18 @@ export async function run(argv: string[], env: Record<string, string | undefined
         const { lc } = getConfigs(env);
         const card = await mkBackend(env).readCard({ id, stage, type: cardType(type) });
         io.out(json(reduceVerdict(card, JSON.parse(verdictJson), lc)));
+        return 0;
+      }
+      case "run-pass": {
+        const dryRun = rest.includes("--dry-run");
+        const { lc, policy } = getConfigs(env);
+        for (const w of inertAdvisorWarnings(lc, policy)) io.err(`warning: ${w}`);
+        if (!dryRun) {
+          io.err("run-pass: only --dry-run is supported in this build — the production agent dispatcher ships with the yarradev-run skill. Re-run with --dry-run.");
+          return 2;
+        }
+        const report: PassReport = await runPass({ backend: mkBackend(env), lc, policy, now: () => Date.now() }, { dryRun: true });
+        io.out(json(report));
         return 0;
       }
       default:
