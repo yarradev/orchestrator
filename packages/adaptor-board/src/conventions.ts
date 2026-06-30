@@ -1,5 +1,5 @@
 import type { Op, CanonicalCard } from "@yarradev/core";
-import type { ActInput, EnrichedBoardCard } from "@yarradev/board-client";
+import type { ActInput, EnrichedBoardCard } from "@yarrasys/board-client";
 
 /** Map an orchestrator Op to a board ActInput. Returns null for ops the board handles natively via
   * side-effects (e.g. setOverlay is handled by VETO/HOLD/CLEAR_VETO acts, not a direct overlay toggle). */

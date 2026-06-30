@@ -3,7 +3,7 @@ import { runBoardBackendContract } from "@yarradev/core/testing";
 import { BoardAdaptor } from "../src/board-adaptor.js";
 import { FakeBoardApi } from "../src/testing/fake-board-api.js";
 import type { BoardBackend, CanonicalCard } from "@yarradev/core";
-import type { EnrichedBoardCard } from "@yarradev/board-client";
+import type { EnrichedBoardCard } from "@yarrasys/board-client";
 
 // Convert a CanonicalCard to an EnrichedBoardCard for seeding the FakeBoardApi.
 function toEnriched(c: CanonicalCard): EnrichedBoardCard {

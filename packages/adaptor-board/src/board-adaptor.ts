@@ -1,7 +1,7 @@
 import type {
   BoardBackend, CanonicalCard, CardRef, ReadyFilter, Op, Fence, ApplyResult, OpResult, BackendCapabilities,
 } from "@yarradev/core";
-import type { BoardClient, ActInput } from "@yarradev/board-client";
+import type { BoardClient, ActInput } from "@yarrasys/board-client";
 import { opToAct, appendOutcomeToOpResult, mapEnrichedToCanonical } from "./conventions.js";
 
 export class BoardAdaptor implements BoardBackend {
