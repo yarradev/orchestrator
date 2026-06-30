@@ -65,6 +65,7 @@ export class InMemoryBoardBackend implements BoardBackend {
         case "claim": {
           if (live) { results.push({ op, outcome: "fenced", reason: "already leased" }); break; }
           c.lease = { epoch: op.epoch, holder: fence.holder, role: op.role, expiresAt: this.now() + op.ttlS * 1000 };
+          c.epoch = Math.max(c.epoch ?? 0, op.epoch);   // durable whole-card high-water (persists past clearLease)
           results.push({ op, outcome: "committed" });
           break;
         }
@@ -147,9 +148,8 @@ export class InMemoryBoardBackend implements BoardBackend {
           break;
         }
         default: {
-          // Safety net for future Op variants; op is `never` here (exhaustive switch)
-          const anyOp = op as { kind: string };
-          results.push({ op, outcome: "unsupported", reason: `unhandled op ${anyOp.kind}` });
+          const _exhaustive: never = op;   // a new Op without a fake handler = a compile error here
+          results.push({ op, outcome: "unsupported", reason: `unhandled op ${(_exhaustive as { kind: string }).kind}` });
           break;
         }
       }
