@@ -48,8 +48,8 @@ These materially shape the plan. Recommendations given; confirm or override befo
 - `vitest.config.ts`
 - `src/index.ts` — barrel: `decide`, `reduce`, `parseVerdict`, `BoardClient`, `loadLifecycle`, types.
 - `src/types.ts` — `Action` (decide's return), `Verdict` (agent verdict), `TeamPolicy`; re-exports `EnrichedItem`/`ActInput`/`BoardMachine` from `@yarradev/shared`.
-- `src/decide.ts` — `decide(card, machine, policy, nowMs): Action`, `EnrichedItem`-native.
-- `src/reduce.ts` — `reduce(verdict, card, machine): ActInput[]`.
+- `src/decide.ts` — `decide(card: EnrichedItem, lifecycle: Lifecycle, policy: TeamPolicy, nowMs): Action`, `EnrichedItem`-native.
+- `src/reduce.ts` — `reduce(verdict: Verdict, card: EnrichedItem, lifecycle: Lifecycle): ActInput[]`.
 - `src/verdict.ts` — `parseVerdict(text): Verdict`.
 - `src/boardClient.ts` — the one typed HTTP client (reads + all act helpers).
 - `src/config.ts` — `loadLifecycle(machine)` / coherence check (lifecycle from `GET /config`).
