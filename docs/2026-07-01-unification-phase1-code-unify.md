@@ -23,7 +23,7 @@
 
 These materially shape the plan. Recommendations given; confirm or override before Task 1.
 
-- [ ] **D1 — Where does the core source live?**
+- [x] **D1 — Where does the core source live? → RESOLVED (2026-07-02): Option A — `platform/packages/orchestrator-core/`.** (Decided during the LikeC4 target-model session; the model now places `orchestratorCore` as a first-party platform container.)
   - **Option A (RECOMMENDED): `platform/packages/orchestrator-core/`** — a new workspace package in the platform monorepo. *Pros:* imports `EnrichedItem`/`ActInput`/`BoardMachine` directly from `@yarradev/shared` (single source of truth, zero type drift); reuses the platform's tsc+vitest+esbuild toolchain; the plugin stays a lean zero-build artifact that only ships the bundled `.mjs`. *Con:* diverges from design §2's picture of core "inside the plugin" — here the *authored source* is in platform, the *bundle* ships in the plugin. Repo count still collapses to 3 (core absorbed into platform, `yarradev/orchestrator` archived in Phase 3).
   - **Option B: `yarradev-board/core/` (TS in the plugin repo)** — matches design §2 literally ("plugin absorbs core"). *Con:* the lean plugin gains a full tsc+esbuild+vitest toolchain, and must **vendor** the board-protocol types (`EnrichedItem`, `ActInput`, `BoardMachine`) with a CI drift-check against `@yarradev/shared` — duplicated types, more moving parts.
   - This plan is written for **Option A**. If B is chosen, Tasks 1/2/6 change (types vendored + drift-check; toolchain added to the plugin).
