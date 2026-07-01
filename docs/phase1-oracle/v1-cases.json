@@ -1,0 +1,2264 @@
+[
+  {
+    "_name": "fresh-design → spawn designer @1",
+    "_expect": {
+      "action": "spawn",
+      "claim_role": "designer",
+      "claim_epoch": 1,
+      "ops": [
+        "claim",
+        "spawn"
+      ]
+    },
+    "card": 1,
+    "type": "story",
+    "stage": "design",
+    "now": "2026-06-20T12:00:00Z",
+    "overlays": {
+      "agent_running": false,
+      "blocked": false
+    },
+    "current_epoch": 0,
+    "lease": {
+      "active": false
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": false
+    },
+    "counters": {
+      "transitions": 0,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "design + MOVE@current (judgement) → advance to development",
+    "_expect": {
+      "action": "advance",
+      "set_stage_to": "development",
+      "ops": [
+        "set-stage",
+        "clear-lease"
+      ]
+    },
+    "card": 1,
+    "stage": "design",
+    "now": "2026-06-20T12:01:00Z",
+    "overlays": {
+      "agent_running": true,
+      "blocked": false
+    },
+    "current_epoch": 1,
+    "lease": {
+      "active": true,
+      "epoch": 1,
+      "role": "designer",
+      "ttl": 1800,
+      "started_at": "2026-06-20T12:00:00Z"
+    },
+    "completion": {
+      "terminal": {
+        "by": "MOVE",
+        "from": "design",
+        "to": "development",
+        "epoch": 1
+      },
+      "output_present": false
+    },
+    "counters": {
+      "transitions": 1,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "design + worker running, not expired, no completion → noop",
+    "_expect": {
+      "action": "noop"
+    },
+    "card": 1,
+    "stage": "design",
+    "now": "2026-06-20T12:01:00Z",
+    "overlays": {
+      "agent_running": true,
+      "blocked": false
+    },
+    "current_epoch": 1,
+    "lease": {
+      "active": true,
+      "epoch": 1,
+      "role": "designer",
+      "ttl": 1800,
+      "started_at": "2026-06-20T12:00:00Z"
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": false
+    },
+    "counters": {
+      "transitions": 1,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "design + lease EXPIRED, no completion → reclaim (bump to @2)",
+    "_expect": {
+      "action": "reclaim",
+      "claim_epoch": 2,
+      "ops": [
+        "claim",
+        "spawn"
+      ]
+    },
+    "card": 1,
+    "stage": "design",
+    "now": "2026-06-20T13:00:00Z",
+    "overlays": {
+      "agent_running": true,
+      "blocked": false
+    },
+    "current_epoch": 1,
+    "lease": {
+      "active": true,
+      "epoch": 1,
+      "role": "designer",
+      "ttl": 1800,
+      "started_at": "2026-06-20T12:00:00Z"
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": false
+    },
+    "counters": {
+      "transitions": 1,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "FENCING: stale MOVE@1 (terminal=null at cur=2) + expired → reclaim, NOT advance",
+    "_expect": {
+      "action": "reclaim",
+      "claim_epoch": 3
+    },
+    "card": 1,
+    "stage": "development",
+    "now": "2026-06-20T13:00:00Z",
+    "overlays": {
+      "agent_running": true,
+      "blocked": false
+    },
+    "current_epoch": 2,
+    "lease": {
+      "active": true,
+      "epoch": 2,
+      "role": "developer",
+      "ttl": 1800,
+      "started_at": "2026-06-20T12:00:00Z"
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": false
+    },
+    "checks": {
+      "ci_green": "absent"
+    },
+    "counters": {
+      "transitions": 2,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "development + output (PR NOTE) + ci_green=success → advance to testing",
+    "_expect": {
+      "action": "advance",
+      "set_stage_to": "testing",
+      "ops": [
+        "set-stage",
+        "clear-lease"
+      ]
+    },
+    "card": 1,
+    "stage": "development",
+    "now": "2026-06-20T12:05:00Z",
+    "overlays": {
+      "agent_running": false,
+      "blocked": false
+    },
+    "current_epoch": 2,
+    "lease": {
+      "active": false
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": true
+    },
+    "checks": {
+      "ci_green": "success"
+    },
+    "counters": {
+      "transitions": 2,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "development + output + ci_green=pending → noop (wait)",
+    "_expect": {
+      "action": "noop"
+    },
+    "card": 1,
+    "stage": "development",
+    "now": "2026-06-20T12:05:00Z",
+    "overlays": {
+      "agent_running": false,
+      "blocked": false
+    },
+    "current_epoch": 2,
+    "lease": {
+      "active": false
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": true
+    },
+    "checks": {
+      "ci_green": "pending"
+    },
+    "counters": {
+      "transitions": 2,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "development + output + ci_green=failure, no lease → re-spawn developer to fix",
+    "_expect": {
+      "action": "spawn",
+      "claim_role": "developer",
+      "ops": [
+        "claim",
+        "spawn"
+      ]
+    },
+    "card": 1,
+    "stage": "development",
+    "now": "2026-06-20T12:05:00Z",
+    "overlays": {
+      "agent_running": false,
+      "blocked": false
+    },
+    "current_epoch": 2,
+    "lease": {
+      "active": false
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": true
+    },
+    "checks": {
+      "ci_green": "failure"
+    },
+    "counters": {
+      "transitions": 2,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "development + output + ci_green=absent → noop (FAIL-CLOSED, do not advance)",
+    "_expect": {
+      "action": "noop"
+    },
+    "card": 1,
+    "stage": "development",
+    "now": "2026-06-20T12:05:00Z",
+    "overlays": {
+      "agent_running": false,
+      "blocked": false
+    },
+    "current_epoch": 2,
+    "lease": {
+      "active": false
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": true
+    },
+    "checks": {
+      "ci_green": "absent"
+    },
+    "counters": {
+      "transitions": 2,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "testing + output + tests_green=success → advance to done",
+    "_expect": {
+      "action": "advance",
+      "set_stage_to": "done",
+      "ops": [
+        "set-stage",
+        "clear-lease"
+      ]
+    },
+    "card": 1,
+    "stage": "testing",
+    "now": "2026-06-20T12:10:00Z",
+    "overlays": {
+      "agent_running": false,
+      "blocked": false
+    },
+    "current_epoch": 3,
+    "lease": {
+      "active": false
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": true
+    },
+    "checks": {
+      "tests_green": "success"
+    },
+    "counters": {
+      "transitions": 3,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "testing + REJECT@current → advance-backward to development",
+    "_expect": {
+      "action": "advance-backward",
+      "set_stage_to": "development",
+      "ops": [
+        "set-stage",
+        "clear-lease"
+      ]
+    },
+    "card": 1,
+    "stage": "testing",
+    "now": "2026-06-20T12:10:00Z",
+    "overlays": {
+      "agent_running": true,
+      "blocked": false
+    },
+    "current_epoch": 4,
+    "lease": {
+      "active": true,
+      "epoch": 4,
+      "role": "tester",
+      "ttl": 1800,
+      "started_at": "2026-06-20T12:09:00Z"
+    },
+    "completion": {
+      "terminal": {
+        "by": "REJECT",
+        "from": "testing",
+        "to": "development",
+        "epoch": 4
+      },
+      "output_present": false
+    },
+    "checks": {
+      "tests_green": "failure"
+    },
+    "counters": {
+      "transitions": 5,
+      "bounces": {
+        "testing->development": 1
+      }
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "open QUESTION not parked → block + route",
+    "_expect": {
+      "action": "block",
+      "ops": [
+        "add-label",
+        "post"
+      ]
+    },
+    "card": 1,
+    "stage": "design",
+    "now": "2026-06-20T12:02:00Z",
+    "overlays": {
+      "agent_running": true,
+      "blocked": false
+    },
+    "current_epoch": 1,
+    "lease": {
+      "active": true,
+      "epoch": 1,
+      "role": "designer",
+      "ttl": 1800,
+      "started_at": "2026-06-20T12:01:30Z"
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": false
+    },
+    "open_question": {
+      "cat": "product",
+      "answered": false,
+      "deadline_passed": false
+    },
+    "counters": {
+      "transitions": 1,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "blocked + answer received → unblock",
+    "_expect": {
+      "action": "unblock",
+      "ops": [
+        "remove-label"
+      ]
+    },
+    "card": 1,
+    "stage": "design",
+    "now": "2026-06-20T12:30:00Z",
+    "overlays": {
+      "agent_running": false,
+      "blocked": true
+    },
+    "current_epoch": 1,
+    "lease": {
+      "active": false
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": false
+    },
+    "open_question": {
+      "cat": "product",
+      "answered": true,
+      "deadline_passed": false
+    },
+    "answer_pending_unblock": true,
+    "counters": {
+      "transitions": 1,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "blocked + deadline passed, no answer → escalate",
+    "_expect": {
+      "action": "escalate"
+    },
+    "card": 1,
+    "stage": "design",
+    "now": "2026-06-21T13:00:00Z",
+    "overlays": {
+      "agent_running": false,
+      "blocked": true
+    },
+    "current_epoch": 1,
+    "lease": {
+      "active": false
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": false
+    },
+    "open_question": {
+      "cat": "product",
+      "answered": false,
+      "deadline_passed": true
+    },
+    "answer_pending_unblock": false,
+    "counters": {
+      "transitions": 1,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "transition budget exceeded → escalate (termination backstop)",
+    "_expect": {
+      "action": "escalate",
+      "ops": [
+        "post",
+        "add-label",
+        "update-pin"
+      ],
+      "post_type": "ESCALATE",
+      "post_to": "@human"
+    },
+    "card": 1,
+    "stage": "development",
+    "now": "2026-06-20T14:00:00Z",
+    "overlays": {
+      "agent_running": false,
+      "blocked": false
+    },
+    "current_epoch": 8,
+    "lease": {
+      "active": false
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": false
+    },
+    "counters": {
+      "transitions": 12,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "bounce limit exceeded → escalate",
+    "_expect": {
+      "action": "escalate"
+    },
+    "card": 1,
+    "stage": "development",
+    "now": "2026-06-20T14:00:00Z",
+    "overlays": {
+      "agent_running": false,
+      "blocked": false
+    },
+    "current_epoch": 7,
+    "lease": {
+      "active": false
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": false
+    },
+    "counters": {
+      "transitions": 9,
+      "bounces": {
+        "testing->development": 3
+      }
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "malformed card (two stage labels) → escalate",
+    "_expect": {
+      "action": "escalate"
+    },
+    "card": 1,
+    "stage": null,
+    "now": "2026-06-20T12:00:00Z",
+    "overlays": {
+      "agent_running": false,
+      "blocked": false
+    },
+    "current_epoch": 0,
+    "lease": {
+      "active": false
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": false
+    },
+    "counters": {
+      "transitions": 0,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": true,
+      "reasons": [
+        "two stage:* labels"
+      ]
+    }
+  },
+  {
+    "_name": "done (terminal) → noop",
+    "_expect": {
+      "action": "noop"
+    },
+    "card": 1,
+    "stage": "done",
+    "now": "2026-06-20T12:20:00Z",
+    "overlays": {
+      "agent_running": false,
+      "blocked": false
+    },
+    "current_epoch": 4,
+    "lease": {
+      "active": false
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": false
+    },
+    "counters": {
+      "transitions": 4,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "REGRESSION: post-advance idempotent re-run (stale design MOVE, now at development) → spawn developer @2, not re-advance",
+    "_expect": {
+      "action": "spawn",
+      "claim_role": "developer",
+      "claim_epoch": 2,
+      "ops": [
+        "claim",
+        "spawn"
+      ]
+    },
+    "card": 1,
+    "stage": "development",
+    "now": "2026-06-20T12:02:00Z",
+    "overlays": {
+      "agent_running": false,
+      "blocked": false
+    },
+    "current_epoch": 1,
+    "lease": {
+      "active": false
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": false
+    },
+    "checks": {
+      "ci_green": "absent"
+    },
+    "counters": {
+      "transitions": 2,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "REGRESSION: reclaim uses stage owner (developer), not stale lease.role (designer)",
+    "_expect": {
+      "action": "reclaim",
+      "claim_role": "developer",
+      "claim_epoch": 3,
+      "ops": [
+        "claim",
+        "spawn"
+      ]
+    },
+    "card": 1,
+    "stage": "development",
+    "now": "2026-06-20T13:00:00Z",
+    "overlays": {
+      "agent_running": true,
+      "blocked": false
+    },
+    "current_epoch": 2,
+    "lease": {
+      "active": true,
+      "epoch": 2,
+      "role": "designer",
+      "ttl": 1800,
+      "started_at": "2026-06-20T12:00:00Z"
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": false
+    },
+    "checks": {
+      "ci_green": "absent"
+    },
+    "counters": {
+      "transitions": 2,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "REGRESSION: REJECT on undefined backward edge (design→analysis) → escalate, no illegal stage write",
+    "_expect": {
+      "action": "escalate",
+      "ops": [
+        "post",
+        "add-label",
+        "update-pin"
+      ],
+      "post_type": "ESCALATE",
+      "post_to": "@human"
+    },
+    "card": 1,
+    "stage": "design",
+    "now": "2026-06-20T12:05:00Z",
+    "overlays": {
+      "agent_running": true,
+      "blocked": false
+    },
+    "current_epoch": 1,
+    "lease": {
+      "active": true,
+      "epoch": 1,
+      "role": "designer",
+      "ttl": 1800,
+      "started_at": "2026-06-20T12:04:30Z"
+    },
+    "completion": {
+      "terminal": {
+        "by": "REJECT",
+        "from": "design",
+        "to": "analysis",
+        "epoch": 1
+      },
+      "output_present": false
+    },
+    "counters": {
+      "transitions": 1,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "REGRESSION: mechanical MOVE@cur + ci failure + LIVE unexpired lease → noop (no double-spawn)",
+    "_expect": {
+      "action": "noop"
+    },
+    "card": 1,
+    "stage": "development",
+    "now": "2026-06-20T12:05:00Z",
+    "overlays": {
+      "agent_running": true,
+      "blocked": false
+    },
+    "current_epoch": 2,
+    "lease": {
+      "active": true,
+      "epoch": 2,
+      "role": "developer",
+      "ttl": 1800,
+      "started_at": "2026-06-20T12:04:00Z"
+    },
+    "completion": {
+      "terminal": {
+        "by": "MOVE",
+        "from": "development",
+        "to": "testing",
+        "epoch": 2
+      },
+      "output_present": true
+    },
+    "checks": {
+      "ci_green": "failure"
+    },
+    "counters": {
+      "transitions": 2,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "REGRESSION: leaseExpired fail-closed when config lacks skew (uses default skew=0 here) — active lease past ttl → reclaim",
+    "_expect": {
+      "action": "reclaim",
+      "claim_epoch": 2
+    },
+    "card": 1,
+    "stage": "design",
+    "now": "2026-06-25T00:00:00Z",
+    "overlays": {
+      "agent_running": true,
+      "blocked": false
+    },
+    "current_epoch": 1,
+    "lease": {
+      "active": true,
+      "epoch": 1,
+      "role": "designer",
+      "ttl": 1800,
+      "started_at": "2026-06-20T12:00:00Z"
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": false
+    },
+    "counters": {
+      "transitions": 1,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "SECURITY: dev + payments file changed + advisor not reviewed + ci green → spawn security-advisor",
+    "_expect": {
+      "action": "spawn-advisor",
+      "claim_role": "security-advisor",
+      "claim_epoch": 3,
+      "ops": [
+        "claim",
+        "spawn"
+      ]
+    },
+    "card": 1,
+    "stage": "development",
+    "now": "2026-06-20T12:05:00Z",
+    "overlays": {
+      "agent_running": false,
+      "blocked": false,
+      "veto_held": false
+    },
+    "current_epoch": 2,
+    "lease": {
+      "active": false
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": true
+    },
+    "checks": {
+      "ci_green": "success"
+    },
+    "pr": {
+      "linked": true,
+      "changed_files": [
+        "src/payments/charge.js"
+      ]
+    },
+    "advisors": {
+      "security-advisor": {
+        "reviewed_at_epoch": false,
+        "veto_open": false
+      }
+    },
+    "counters": {
+      "transitions": 2,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "SECURITY: dev + .env file changed (glob **/.env*) → spawn security-advisor",
+    "_expect": {
+      "action": "spawn-advisor",
+      "claim_role": "security-advisor",
+      "ops": [
+        "claim",
+        "spawn"
+      ]
+    },
+    "card": 1,
+    "stage": "development",
+    "now": "2026-06-20T12:05:00Z",
+    "overlays": {
+      "agent_running": false,
+      "blocked": false,
+      "veto_held": false
+    },
+    "current_epoch": 2,
+    "lease": {
+      "active": false
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": true
+    },
+    "checks": {
+      "ci_green": "success"
+    },
+    "pr": {
+      "linked": true,
+      "changed_files": [
+        "app/config/.env.production"
+      ]
+    },
+    "advisors": {
+      "security-advisor": {
+        "reviewed_at_epoch": false,
+        "veto_open": false
+      }
+    },
+    "counters": {
+      "transitions": 2,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "SECURITY: dev + NON-watched file + ci green → advance (advisor not triggered)",
+    "_expect": {
+      "action": "advance",
+      "set_stage_to": "testing",
+      "reason_contains": "matched 0/2 changed files"
+    },
+    "card": 1,
+    "stage": "development",
+    "now": "2026-06-20T12:05:00Z",
+    "overlays": {
+      "agent_running": false,
+      "blocked": false,
+      "veto_held": false
+    },
+    "current_epoch": 2,
+    "lease": {
+      "active": false
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": true
+    },
+    "checks": {
+      "ci_green": "success"
+    },
+    "pr": {
+      "linked": true,
+      "changed_files": [
+        "README.md",
+        "docs/x.md"
+      ]
+    },
+    "advisors": {
+      "security-advisor": {
+        "reviewed_at_epoch": false,
+        "veto_open": false
+      }
+    },
+    "counters": {
+      "transitions": 2,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "SECURITY: advisor dispatched + lease held + not yet reviewed → noop (no double-spawn)",
+    "_expect": {
+      "action": "noop"
+    },
+    "card": 1,
+    "stage": "development",
+    "now": "2026-06-20T12:06:00Z",
+    "overlays": {
+      "agent_running": true,
+      "blocked": false,
+      "veto_held": false
+    },
+    "current_epoch": 3,
+    "lease": {
+      "active": true,
+      "epoch": 3,
+      "role": "security-advisor",
+      "ttl": 1800,
+      "started_at": "2026-06-20T12:05:45Z"
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": true
+    },
+    "checks": {
+      "ci_green": "success"
+    },
+    "pr": {
+      "linked": true,
+      "changed_files": [
+        "src/payments/charge.js"
+      ]
+    },
+    "advisors": {
+      "security-advisor": {
+        "reviewed_at_epoch": false,
+        "veto_open": false
+      }
+    },
+    "counters": {
+      "transitions": 3,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "SECURITY: dev + payments file + advisor reviewed (no veto) + ci green → advance to testing",
+    "_expect": {
+      "action": "advance",
+      "set_stage_to": "testing",
+      "ops": [
+        "set-stage",
+        "clear-lease"
+      ]
+    },
+    "card": 1,
+    "stage": "development",
+    "now": "2026-06-20T12:06:00Z",
+    "overlays": {
+      "agent_running": false,
+      "blocked": false,
+      "veto_held": false
+    },
+    "current_epoch": 3,
+    "lease": {
+      "active": false
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": true
+    },
+    "checks": {
+      "ci_green": "success"
+    },
+    "pr": {
+      "linked": true,
+      "changed_files": [
+        "src/payments/charge.js"
+      ]
+    },
+    "advisors": {
+      "security-advisor": {
+        "reviewed_at_epoch": true,
+        "veto_open": false
+      }
+    },
+    "counters": {
+      "transitions": 3,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "SECURITY: dev + payments file + advisor VETO open + ci green → veto-hold (parks, escalates @human)",
+    "_expect": {
+      "action": "veto-hold",
+      "ops": [
+        "add-label",
+        "post",
+        "update-pin"
+      ],
+      "add_label": "veto:held",
+      "post_type": "ESCALATE",
+      "post_to": "@human"
+    },
+    "card": 1,
+    "stage": "development",
+    "now": "2026-06-20T12:06:00Z",
+    "overlays": {
+      "agent_running": false,
+      "blocked": false,
+      "veto_held": false
+    },
+    "current_epoch": 3,
+    "lease": {
+      "active": false
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": true
+    },
+    "checks": {
+      "ci_green": "success"
+    },
+    "pr": {
+      "linked": true,
+      "changed_files": [
+        "src/payments/charge.js"
+      ]
+    },
+    "advisors": {
+      "security-advisor": {
+        "reviewed_at_epoch": true,
+        "veto_open": true
+      }
+    },
+    "counters": {
+      "transitions": 3,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "SECURITY: veto:held + still vetoed (no CLEAR) → noop (parked, fail-closed)",
+    "_expect": {
+      "action": "noop"
+    },
+    "card": 1,
+    "stage": "development",
+    "now": "2026-06-20T12:10:00Z",
+    "overlays": {
+      "agent_running": false,
+      "blocked": false,
+      "veto_held": true
+    },
+    "current_epoch": 3,
+    "lease": {
+      "active": false
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": true
+    },
+    "checks": {
+      "ci_green": "success"
+    },
+    "pr": {
+      "linked": true,
+      "changed_files": [
+        "src/payments/charge.js"
+      ]
+    },
+    "advisors": {
+      "security-advisor": {
+        "reviewed_at_epoch": true,
+        "veto_open": true,
+        "veto_ever": true
+      }
+    },
+    "counters": {
+      "transitions": 3,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "SECURITY: veto:held + accountable CLEAR (veto_open=false) → veto-clear (remove label)",
+    "_expect": {
+      "action": "veto-clear",
+      "ops": [
+        "remove-label"
+      ],
+      "remove_label": "veto:held"
+    },
+    "card": 1,
+    "stage": "development",
+    "now": "2026-06-20T12:20:00Z",
+    "overlays": {
+      "agent_running": false,
+      "blocked": false,
+      "veto_held": true
+    },
+    "current_epoch": 3,
+    "lease": {
+      "active": false
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": true
+    },
+    "checks": {
+      "ci_green": "success"
+    },
+    "pr": {
+      "linked": true,
+      "changed_files": [
+        "src/payments/charge.js"
+      ]
+    },
+    "advisors": {
+      "security-advisor": {
+        "reviewed_at_epoch": true,
+        "veto_open": false,
+        "veto_ever": true
+      }
+    },
+    "counters": {
+      "transitions": 3,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "EPIC: analysis + no lease → spawn analyst @1",
+    "_expect": {
+      "action": "spawn",
+      "claim_role": "analyst",
+      "claim_epoch": 1,
+      "ops": [
+        "claim",
+        "spawn"
+      ]
+    },
+    "card": 900,
+    "card_type": "epic",
+    "stage": "analysis",
+    "now": "2026-06-21T12:00:00Z",
+    "overlays": {
+      "agent_running": false,
+      "blocked": false,
+      "veto_held": false
+    },
+    "current_epoch": 0,
+    "lease": {
+      "active": false
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": false
+    },
+    "counters": {
+      "transitions": 0,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "EPIC: analysis + analyst MOVE@cur → advance to decompose",
+    "_expect": {
+      "action": "advance",
+      "set_stage_to": "decompose",
+      "ops": [
+        "set-stage",
+        "clear-lease"
+      ]
+    },
+    "card": 900,
+    "card_type": "epic",
+    "stage": "analysis",
+    "now": "2026-06-21T12:01:00Z",
+    "overlays": {
+      "agent_running": true,
+      "blocked": false,
+      "veto_held": false
+    },
+    "current_epoch": 1,
+    "lease": {
+      "active": true,
+      "epoch": 1,
+      "role": "analyst",
+      "ttl": 1800,
+      "started_at": "2026-06-21T12:00:00Z"
+    },
+    "completion": {
+      "terminal": {
+        "by": "MOVE",
+        "from": "analysis",
+        "to": "decompose",
+        "epoch": 1
+      },
+      "output_present": false
+    },
+    "counters": {
+      "transitions": 1,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "EPIC: decompose + no lease → spawn analyst",
+    "_expect": {
+      "action": "spawn",
+      "claim_role": "analyst",
+      "ops": [
+        "claim",
+        "spawn"
+      ]
+    },
+    "card": 900,
+    "card_type": "epic",
+    "stage": "decompose",
+    "now": "2026-06-21T12:02:00Z",
+    "overlays": {
+      "agent_running": false,
+      "blocked": false,
+      "veto_held": false
+    },
+    "current_epoch": 1,
+    "lease": {
+      "active": false
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": false
+    },
+    "counters": {
+      "transitions": 1,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "EPIC: integrating + 1/3 children done → noop (fan-in barrier)",
+    "_expect": {
+      "action": "noop"
+    },
+    "card": 900,
+    "card_type": "epic",
+    "stage": "integrating",
+    "now": "2026-06-21T12:05:00Z",
+    "overlays": {
+      "agent_running": false,
+      "blocked": false,
+      "veto_held": false
+    },
+    "current_epoch": 2,
+    "lease": {
+      "active": false
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": false
+    },
+    "children": {
+      "total": 3,
+      "done": 1
+    },
+    "counters": {
+      "transitions": 2,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "EPIC: integrating + 0 children -> escalate (anomalous; budget cannot catch a barrier parked forever)",
+    "_expect": {
+      "action": "escalate"
+    },
+    "card": 900,
+    "card_type": "epic",
+    "stage": "integrating",
+    "now": "2026-06-21T12:05:00Z",
+    "overlays": {
+      "agent_running": false,
+      "blocked": false,
+      "veto_held": false
+    },
+    "current_epoch": 2,
+    "lease": {
+      "active": false
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": false
+    },
+    "children": {
+      "total": 0,
+      "done": 0
+    },
+    "counters": {
+      "transitions": 2,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "EPIC: integrating + 3/3 children done → advance to done (fan-in complete)",
+    "_expect": {
+      "action": "advance",
+      "set_stage_to": "done",
+      "ops": [
+        "set-stage"
+      ]
+    },
+    "card": 900,
+    "card_type": "epic",
+    "stage": "integrating",
+    "now": "2026-06-21T12:30:00Z",
+    "overlays": {
+      "agent_running": false,
+      "blocked": false,
+      "veto_held": false
+    },
+    "current_epoch": 2,
+    "lease": {
+      "active": false
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": false
+    },
+    "children": {
+      "total": 3,
+      "done": 3
+    },
+    "counters": {
+      "transitions": 2,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "SECURITY: dev + watched file + advisor HOLD open (not escalated) + ci green → advisor-hold (escalate @human, NOT advance)",
+    "_expect": {
+      "action": "advisor-hold",
+      "ops": [
+        "post",
+        "update-pin"
+      ],
+      "post_type": "ESCALATE",
+      "post_to": "@human"
+    },
+    "card": 1,
+    "stage": "development",
+    "now": "2026-06-21T12:06:00Z",
+    "overlays": {
+      "agent_running": false,
+      "blocked": false,
+      "veto_held": false
+    },
+    "current_epoch": 3,
+    "lease": {
+      "active": false
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": true
+    },
+    "checks": {
+      "ci_green": "success"
+    },
+    "pr": {
+      "linked": true,
+      "changed_files": [
+        "src/payments/charge.js"
+      ]
+    },
+    "advisors": {
+      "security-advisor": {
+        "reviewed_at_epoch": true,
+        "veto_open": false,
+        "hold_open": true,
+        "hold_escalated": false
+      }
+    },
+    "counters": {
+      "transitions": 3,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "SECURITY: HOLD open + already escalated → noop (parked, awaiting human CLEAR/ACK)",
+    "_expect": {
+      "action": "noop"
+    },
+    "card": 1,
+    "stage": "development",
+    "now": "2026-06-21T12:10:00Z",
+    "overlays": {
+      "agent_running": false,
+      "blocked": false,
+      "veto_held": false
+    },
+    "current_epoch": 3,
+    "lease": {
+      "active": false
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": true
+    },
+    "checks": {
+      "ci_green": "success"
+    },
+    "pr": {
+      "linked": true,
+      "changed_files": [
+        "src/payments/charge.js"
+      ]
+    },
+    "advisors": {
+      "security-advisor": {
+        "reviewed_at_epoch": true,
+        "veto_open": false,
+        "hold_open": true,
+        "hold_escalated": true
+      }
+    },
+    "counters": {
+      "transitions": 3,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "SECURITY: HOLD cleared by human ACK (hold_open=false) + reviewed → advance to testing",
+    "_expect": {
+      "action": "advance",
+      "set_stage_to": "testing",
+      "ops": [
+        "set-stage",
+        "clear-lease"
+      ]
+    },
+    "card": 1,
+    "stage": "development",
+    "now": "2026-06-21T12:20:00Z",
+    "overlays": {
+      "agent_running": false,
+      "blocked": false,
+      "veto_held": false
+    },
+    "current_epoch": 3,
+    "lease": {
+      "active": false
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": true
+    },
+    "checks": {
+      "ci_green": "success"
+    },
+    "pr": {
+      "linked": true,
+      "changed_files": [
+        "src/payments/charge.js"
+      ]
+    },
+    "advisors": {
+      "security-advisor": {
+        "reviewed_at_epoch": true,
+        "veto_open": false,
+        "hold_open": false,
+        "hold_escalated": false
+      }
+    },
+    "counters": {
+      "transitions": 3,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "SECURITY: HOLD open + PR files drifted OFF watch_paths → still advisor-hold (watch-drift backstop, NOT advance)",
+    "_expect": {
+      "action": "advisor-hold",
+      "ops": [
+        "post",
+        "update-pin"
+      ],
+      "post_type": "ESCALATE",
+      "post_to": "@human",
+      "post_kvs": {
+        "kind": "hold"
+      }
+    },
+    "card": 1,
+    "stage": "development",
+    "now": "2026-06-21T12:30:00Z",
+    "overlays": {
+      "agent_running": false,
+      "blocked": false,
+      "veto_held": false
+    },
+    "current_epoch": 3,
+    "lease": {
+      "active": false
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": true
+    },
+    "checks": {
+      "ci_green": "success"
+    },
+    "pr": {
+      "linked": true,
+      "changed_files": [
+        "README.md",
+        "docs/x.md"
+      ]
+    },
+    "advisors": {
+      "security-advisor": {
+        "reviewed_at_epoch": true,
+        "veto_open": false,
+        "hold_open": true,
+        "hold_escalated": false
+      }
+    },
+    "counters": {
+      "transitions": 3,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "SECURITY: HOLD open AND VETO open → veto-hold (binding beats non-binding)",
+    "_expect": {
+      "action": "veto-hold",
+      "add_label": "veto:held",
+      "post_type": "ESCALATE",
+      "post_to": "@human"
+    },
+    "card": 1,
+    "stage": "development",
+    "now": "2026-06-21T12:31:00Z",
+    "overlays": {
+      "agent_running": false,
+      "blocked": false,
+      "veto_held": false
+    },
+    "current_epoch": 3,
+    "lease": {
+      "active": false
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": true
+    },
+    "checks": {
+      "ci_green": "success"
+    },
+    "pr": {
+      "linked": true,
+      "changed_files": [
+        "src/payments/charge.js"
+      ]
+    },
+    "advisors": {
+      "security-advisor": {
+        "reviewed_at_epoch": true,
+        "veto_open": true,
+        "hold_open": true,
+        "hold_escalated": false
+      }
+    },
+    "counters": {
+      "transitions": 3,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "SECURITY: HOLD open (not escalated) + agent_running → advisor-hold with clear-lease",
+    "_expect": {
+      "action": "advisor-hold",
+      "ops": [
+        "clear-lease",
+        "post",
+        "update-pin"
+      ],
+      "post_type": "ESCALATE",
+      "post_to": "@human",
+      "post_kvs": {
+        "kind": "hold"
+      }
+    },
+    "card": 1,
+    "stage": "development",
+    "now": "2026-06-21T12:32:00Z",
+    "overlays": {
+      "agent_running": true,
+      "blocked": false,
+      "veto_held": false
+    },
+    "current_epoch": 3,
+    "lease": {
+      "active": true,
+      "epoch": 3,
+      "role": "security-advisor",
+      "ttl": 1800,
+      "started_at": "2026-06-21T12:05:45Z"
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": true
+    },
+    "checks": {
+      "ci_green": "success"
+    },
+    "pr": {
+      "linked": true,
+      "changed_files": [
+        "src/payments/charge.js"
+      ]
+    },
+    "advisors": {
+      "security-advisor": {
+        "reviewed_at_epoch": true,
+        "veto_open": false,
+        "hold_open": true,
+        "hold_escalated": false
+      }
+    },
+    "counters": {
+      "transitions": 3,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "SECURITY: dev + contact-discipline file changed (new email/messaging glob) → spawn security-advisor",
+    "_expect": {
+      "action": "spawn-advisor",
+      "claim_role": "security-advisor",
+      "ops": [
+        "claim",
+        "spawn"
+      ]
+    },
+    "card": 1,
+    "stage": "development",
+    "now": "2026-06-21T12:05:00Z",
+    "overlays": {
+      "agent_running": false,
+      "blocked": false,
+      "veto_held": false
+    },
+    "current_epoch": 2,
+    "lease": {
+      "active": false
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": true
+    },
+    "checks": {
+      "ci_green": "success"
+    },
+    "pr": {
+      "linked": true,
+      "changed_files": [
+        "src/notifications/review-email.ts"
+      ]
+    },
+    "advisors": {
+      "security-advisor": {
+        "reviewed_at_epoch": false,
+        "veto_open": false,
+        "hold_open": false,
+        "hold_escalated": false
+      }
+    },
+    "counters": {
+      "transitions": 2,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "REWORK: development + output_present=false (rework pending, stale merged PR) + ci green + no lease → spawn developer (re-develop, NOT advance)",
+    "_expect": {
+      "action": "spawn",
+      "claim_role": "developer",
+      "claim_epoch": 4,
+      "ops": [
+        "claim",
+        "spawn"
+      ]
+    },
+    "card": 281,
+    "stage": "development",
+    "now": "2026-06-22T00:00:00Z",
+    "overlays": {
+      "agent_running": false,
+      "blocked": false,
+      "veto_held": false
+    },
+    "current_epoch": 3,
+    "lease": {
+      "active": false
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": false
+    },
+    "checks": {
+      "ci_green": "success"
+    },
+    "pr": {
+      "linked": true,
+      "changed_files": [
+        "apps/appointments-api/src/review-request.ts"
+      ]
+    },
+    "advisors": {
+      "security-advisor": {
+        "reviewed_at_epoch": false,
+        "veto_open": false,
+        "hold_open": false,
+        "hold_escalated": false
+      }
+    },
+    "counters": {
+      "transitions": 5,
+      "bounces": {
+        "production->development": 1
+      }
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "EDGE: judgement MOVE names wrong to-stage (design->testing, skips development) -> escalate",
+    "_expect": {
+      "action": "escalate"
+    },
+    "card": 1,
+    "stage": "design",
+    "now": "2026-06-22T00:00:00Z",
+    "overlays": {
+      "agent_running": false,
+      "blocked": false,
+      "veto_held": false
+    },
+    "current_epoch": 1,
+    "lease": {
+      "active": false
+    },
+    "completion": {
+      "terminal": {
+        "by": "MOVE",
+        "from": "design",
+        "to": "testing",
+        "epoch": 1
+      },
+      "output_present": false
+    },
+    "checks": {
+      "ci_green": "absent"
+    },
+    "counters": {
+      "transitions": 1,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "DRIFT: veto:held overlay but no [VETO] ever posted (out-of-band, e.g. #284-286) -> escalate",
+    "_expect": {
+      "action": "escalate"
+    },
+    "card": 1,
+    "stage": "development",
+    "now": "2026-06-22T00:00:00Z",
+    "overlays": {
+      "agent_running": false,
+      "blocked": false,
+      "veto_held": true
+    },
+    "current_epoch": 3,
+    "lease": {
+      "active": false
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": true
+    },
+    "checks": {
+      "ci_green": "success"
+    },
+    "advisors": {
+      "security-advisor": {
+        "reviewed_at_epoch": false,
+        "veto_open": false,
+        "veto_ever": false,
+        "hold_open": false,
+        "hold_escalated": false
+      }
+    },
+    "counters": {
+      "transitions": 3,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "DRIFT: blocked overlay but no open QUESTION (out-of-band) -> escalate",
+    "_expect": {
+      "action": "escalate"
+    },
+    "card": 1,
+    "stage": "development",
+    "now": "2026-06-22T00:00:00Z",
+    "overlays": {
+      "agent_running": false,
+      "blocked": true,
+      "veto_held": false
+    },
+    "current_epoch": 2,
+    "lease": {
+      "active": false
+    },
+    "completion": {
+      "terminal": null,
+      "output_present": true
+    },
+    "checks": {
+      "ci_green": "success"
+    },
+    "open_question": null,
+    "answer_pending_unblock": false,
+    "advisors": {
+      "security-advisor": {
+        "reviewed_at_epoch": false,
+        "veto_open": false,
+        "veto_ever": false,
+        "hold_open": false,
+        "hold_escalated": false
+      }
+    },
+    "counters": {
+      "transitions": 2,
+      "bounces": {}
+    },
+    "malformed": {
+      "is_malformed": false,
+      "reasons": []
+    }
+  },
+  {
+    "_name": "SECURITY (gh#33): advisor reviewed the current PR head (sha prefix-matches) + ci green → advance to testing",
+    "_expect": { "action": "advance", "set_stage_to": "testing", "ops": ["set-stage", "clear-lease"] },
+    "card": 1,
+    "stage": "development",
+    "now": "2026-06-22T12:06:00Z",
+    "overlays": { "agent_running": false, "blocked": false, "veto_held": false },
+    "current_epoch": 3,
+    "lease": { "active": false },
+    "completion": { "terminal": null, "output_present": true },
+    "checks": { "ci_green": "success" },
+    "pr": { "linked": true, "changed_files": ["src/payments/charge.js"], "head": "abc123def456" },
+    "advisors": { "security-advisor": { "reviewed_at_epoch": true, "reviewed_head": "abc123d", "veto_open": false } },
+    "counters": { "transitions": 3, "bounces": {} },
+    "malformed": { "is_malformed": false, "reasons": [] }
+  },
+  {
+    "_name": "SECURITY (gh#33): advisor reviewed an OLD head (fix pushed since) + ci green → re-dispatch advisor on new head",
+    "_expect": { "action": "spawn-advisor", "claim_role": "security-advisor", "claim_epoch": 4, "ops": ["claim", "spawn"], "reason_contains": "head moved" },
+    "card": 1,
+    "stage": "development",
+    "now": "2026-06-22T12:07:00Z",
+    "overlays": { "agent_running": false, "blocked": false, "veto_held": false },
+    "current_epoch": 3,
+    "lease": { "active": false },
+    "completion": { "terminal": null, "output_present": true },
+    "checks": { "ci_green": "success" },
+    "pr": { "linked": true, "changed_files": ["src/payments/charge.js"], "head": "newsha999aaa" },
+    "advisors": { "security-advisor": { "reviewed_at_epoch": true, "reviewed_head": "oldsha111", "veto_open": false } },
+    "counters": { "transitions": 3, "bounces": {} },
+    "malformed": { "is_malformed": false, "reasons": [] }
+  },
+  {
+    "_name": "AUTH (gh#32 inert): VETO lifted by @mallory (NOT in clear_authority) → still veto-clear (inert) + breadcrumb",
+    "_expect": { "action": "veto-clear", "ops": ["remove-label"], "remove_label": "veto:held", "reason_contains": "not in clear_authority" },
+    "card": 1,
+    "stage": "development",
+    "now": "2026-06-22T12:20:00Z",
+    "overlays": { "agent_running": false, "blocked": false, "veto_held": true },
+    "current_epoch": 3,
+    "lease": { "active": false },
+    "completion": { "terminal": null, "output_present": true },
+    "checks": { "ci_green": "success" },
+    "pr": { "linked": true, "changed_files": ["src/payments/charge.js"] },
+    "advisors": { "security-advisor": { "reviewed_at_epoch": true, "veto_open": false, "veto_ever": true } },
+    "authenticity": { "veto_cleared_by": "mallory", "hold_cleared_by": null },
+    "counters": { "transitions": 3, "bounces": {} },
+    "malformed": { "is_malformed": false, "reasons": [] }
+  },
+  {
+    "_name": "AUTH (gh#32 inert): VETO lifted by @human (IN clear_authority) → veto-clear, no breadcrumb",
+    "_expect": { "action": "veto-clear", "ops": ["remove-label"], "remove_label": "veto:held", "reason_not_contains": "clear_authority" },
+    "card": 1,
+    "stage": "development",
+    "now": "2026-06-22T12:21:00Z",
+    "overlays": { "agent_running": false, "blocked": false, "veto_held": true },
+    "current_epoch": 3,
+    "lease": { "active": false },
+    "completion": { "terminal": null, "output_present": true },
+    "checks": { "ci_green": "success" },
+    "pr": { "linked": true, "changed_files": ["src/payments/charge.js"] },
+    "advisors": { "security-advisor": { "reviewed_at_epoch": true, "veto_open": false, "veto_ever": true } },
+    "authenticity": { "veto_cleared_by": "human", "hold_cleared_by": null },
+    "counters": { "transitions": 3, "bounces": {} },
+    "malformed": { "is_malformed": false, "reasons": [] }
+  },
+  {
+    "_name": "gh#56: post-verdict commit, ci pending, advisor reviewed OLD head → noop reason flags re-review pending (not stuck)",
+    "_expect": { "action": "noop", "reason_contains": "advisor re-reviews once ci_green is green" },
+    "card": 1,
+    "stage": "development",
+    "now": "2026-06-22T12:30:00Z",
+    "overlays": { "agent_running": false, "blocked": false, "veto_held": false },
+    "current_epoch": 3,
+    "lease": { "active": false },
+    "completion": { "terminal": null, "output_present": true },
+    "checks": { "ci_green": "pending" },
+    "pr": { "linked": true, "changed_files": ["src/payments/charge.js"], "head": "newsha222" },
+    "advisors": { "security-advisor": { "reviewed_at_epoch": true, "reviewed_head": "oldsha111", "veto_open": false } },
+    "counters": { "transitions": 3, "bounces": {} },
+    "malformed": { "is_malformed": false, "reasons": [] }
+  },
+  {
+    "_name": "gh#56: ci pending but advisor reviewed the CURRENT head → plain pending noop, no re-review suffix",
+    "_expect": { "action": "noop", "reason_contains": "ci_green pending", "reason_not_contains": "head moved" },
+    "card": 1,
+    "stage": "development",
+    "now": "2026-06-22T12:31:00Z",
+    "overlays": { "agent_running": false, "blocked": false, "veto_held": false },
+    "current_epoch": 3,
+    "lease": { "active": false },
+    "completion": { "terminal": null, "output_present": true },
+    "checks": { "ci_green": "pending" },
+    "pr": { "linked": true, "changed_files": ["src/payments/charge.js"], "head": "abc123def" },
+    "advisors": { "security-advisor": { "reviewed_at_epoch": true, "reviewed_head": "abc123d", "veto_open": false } },
+    "counters": { "transitions": 3, "bounces": {} },
+    "malformed": { "is_malformed": false, "reasons": [] }
+  },
+  {
+    "_name": "SCANNER (gh#39): watch_paths MISS but a content scanner hit → dispatch advisor (content scanner)",
+    "_expect": { "action": "spawn-advisor", "claim_role": "security-advisor", "claim_epoch": 3, "ops": ["claim", "spawn"], "reason_contains": "content scanner" },
+    "card": 1,
+    "stage": "development",
+    "now": "2026-06-22T12:40:00Z",
+    "overlays": { "agent_running": false, "blocked": false, "veto_held": false },
+    "current_epoch": 2,
+    "lease": { "active": false },
+    "completion": { "terminal": null, "output_present": true },
+    "checks": { "ci_green": "success" },
+    "pr": { "linked": true, "changed_files": ["docs/readme.md"], "scanner_hits": [{ "scanner_id": "payments-detector", "matched": true }] },
+    "advisors": { "security-advisor": { "reviewed_at_epoch": false, "veto_open": false } },
+    "counters": { "transitions": 2, "bounces": {} },
+    "malformed": { "is_malformed": false, "reasons": [] }
+  },
+  {
+    "_name": "SCANNER (gh#39): scanner hit but advisor already reviewed THIS head → advance (no spurious re-trigger)",
+    "_expect": { "action": "advance", "set_stage_to": "testing", "ops": ["set-stage", "clear-lease"] },
+    "card": 1,
+    "stage": "development",
+    "now": "2026-06-22T12:41:00Z",
+    "overlays": { "agent_running": false, "blocked": false, "veto_held": false },
+    "current_epoch": 3,
+    "lease": { "active": false },
+    "completion": { "terminal": null, "output_present": true },
+    "checks": { "ci_green": "success" },
+    "pr": { "linked": true, "changed_files": ["docs/readme.md"], "head": "cafe1234", "scanner_hits": [{ "scanner_id": "payments-detector", "matched": true }] },
+    "advisors": { "security-advisor": { "reviewed_at_epoch": true, "reviewed_head": "cafe1234", "veto_open": false } },
+    "counters": { "transitions": 3, "bounces": {} },
+    "malformed": { "is_malformed": false, "reasons": [] }
+  },
+  {
+    "_name": "RISK (gh#41): R3 + gate ON + no DECISION → risk-gate escalates @human (parks for the go)",
+    "_risk_gate": true,
+    "_expect": { "action": "risk-gate", "ops": ["post", "update-pin"], "post_type": "ESCALATE", "post_to": "@human", "reason_contains": "R3" },
+    "card": 1, "stage": "development", "now": "2026-06-22T13:00:00Z",
+    "overlays": { "agent_running": false, "blocked": false, "veto_held": false },
+    "current_epoch": 2, "lease": { "active": false },
+    "completion": { "terminal": null, "output_present": true },
+    "checks": { "ci_green": "success" },
+    "pr": { "linked": true, "changed_files": ["docs/x.md"] },
+    "risk": { "reversible": "no", "blast": "component", "boundary": "no", "tier": "R3", "missing_or_contradictory": false, "decision_approved": false, "escalated": false },
+    "counters": { "transitions": 2, "bounces": {} },
+    "malformed": { "is_malformed": false, "reasons": [] }
+  },
+  {
+    "_name": "RISK (gh#41): R3 + gate ON + already escalated this epoch → noop (parked, awaiting DECISION)",
+    "_risk_gate": true,
+    "_expect": { "action": "noop", "reason_contains": "awaiting human" },
+    "card": 1, "stage": "development", "now": "2026-06-22T13:01:00Z",
+    "overlays": { "agent_running": false, "blocked": false, "veto_held": false },
+    "current_epoch": 2, "lease": { "active": false },
+    "completion": { "terminal": null, "output_present": true },
+    "checks": { "ci_green": "success" },
+    "pr": { "linked": true, "changed_files": ["docs/x.md"] },
+    "risk": { "reversible": "no", "blast": "component", "boundary": "no", "tier": "R3", "missing_or_contradictory": false, "decision_approved": false, "escalated": true },
+    "counters": { "transitions": 2, "bounces": {} },
+    "malformed": { "is_malformed": false, "reasons": [] }
+  },
+  {
+    "_name": "RISK (gh#41): R3 + gate ON + human DECISION risk:approved → resume (advance)",
+    "_risk_gate": true,
+    "_expect": { "action": "advance", "set_stage_to": "testing", "ops": ["set-stage", "clear-lease"] },
+    "card": 1, "stage": "development", "now": "2026-06-22T13:02:00Z",
+    "overlays": { "agent_running": false, "blocked": false, "veto_held": false },
+    "current_epoch": 2, "lease": { "active": false },
+    "completion": { "terminal": null, "output_present": true },
+    "checks": { "ci_green": "success" },
+    "pr": { "linked": true, "changed_files": ["docs/x.md"] },
+    "risk": { "reversible": "no", "blast": "component", "boundary": "no", "tier": "R3", "missing_or_contradictory": false, "decision_approved": true, "escalated": true },
+    "counters": { "transitions": 2, "bounces": {} },
+    "malformed": { "is_malformed": false, "reasons": [] }
+  },
+  {
+    "_name": "RISK (gh#41): missing risk labels + gate ON → R4 fail-closed → risk-gate escalate",
+    "_risk_gate": true,
+    "_expect": { "action": "risk-gate", "reason_contains": "R4", "post_type": "ESCALATE", "post_to": "@human" },
+    "card": 1, "stage": "development", "now": "2026-06-22T13:03:00Z",
+    "overlays": { "agent_running": false, "blocked": false, "veto_held": false },
+    "current_epoch": 2, "lease": { "active": false },
+    "completion": { "terminal": null, "output_present": true },
+    "checks": { "ci_green": "success" },
+    "pr": { "linked": true, "changed_files": ["docs/x.md"] },
+    "risk": { "reversible": null, "blast": null, "boundary": null, "tier": "R4", "missing_or_contradictory": true, "decision_approved": false, "escalated": false },
+    "counters": { "transitions": 2, "bounces": {} },
+    "malformed": { "is_malformed": false, "reasons": [] }
+  },
+  {
+    "_name": "RISK (gh#41): R0 + gate ON → low tier never gated → advance",
+    "_risk_gate": true,
+    "_expect": { "action": "advance", "set_stage_to": "testing" },
+    "card": 1, "stage": "development", "now": "2026-06-22T13:04:00Z",
+    "overlays": { "agent_running": false, "blocked": false, "veto_held": false },
+    "current_epoch": 2, "lease": { "active": false },
+    "completion": { "terminal": null, "output_present": true },
+    "checks": { "ci_green": "success" },
+    "pr": { "linked": true, "changed_files": ["docs/x.md"] },
+    "risk": { "reversible": "yes", "blast": "local", "boundary": "no", "tier": "R0", "missing_or_contradictory": false, "decision_approved": false, "escalated": false },
+    "counters": { "transitions": 2, "bounces": {} },
+    "malformed": { "is_malformed": false, "reasons": [] }
+  },
+  {
+    "_name": "RISK (gh#41): R3 but gate OFF (default) → bypassed entirely → advance (live instance unaffected)",
+    "_expect": { "action": "advance", "set_stage_to": "testing" },
+    "card": 1, "stage": "development", "now": "2026-06-22T13:05:00Z",
+    "overlays": { "agent_running": false, "blocked": false, "veto_held": false },
+    "current_epoch": 2, "lease": { "active": false },
+    "completion": { "terminal": null, "output_present": true },
+    "checks": { "ci_green": "success" },
+    "pr": { "linked": true, "changed_files": ["docs/x.md"] },
+    "risk": { "reversible": "no", "blast": "component", "boundary": "no", "tier": "R3", "missing_or_contradictory": false, "decision_approved": false, "escalated": false },
+    "counters": { "transitions": 2, "bounces": {} },
+    "malformed": { "is_malformed": false, "reasons": [] }
+  },
+  {
+    "_name": "gh#63: terminal.from (canonical real stage) holds, but from_label (worker's literal) differs → advance + non-blocking breadcrumb",
+    "_expect": { "action": "advance", "set_stage_to": "development", "reason_contains": "renamed stage" },
+    "card": 1, "stage": "design", "now": "2026-06-20T12:01:00Z",
+    "overlays": { "agent_running": true, "blocked": false },
+    "current_epoch": 1,
+    "lease": { "active": true, "epoch": 1, "role": "designer", "ttl": 1800, "started_at": "2026-06-20T12:00:00Z" },
+    "completion": { "terminal": { "by": "MOVE", "from": "design", "from_label": "spec", "to": "development", "epoch": 1 }, "output_present": false },
+    "counters": { "transitions": 1, "bounces": {} },
+    "malformed": { "is_malformed": false, "reasons": [] }
+  },
+  {
+    "_name": "gh#63 control: from_label matches stage → advance, NO breadcrumb (default instances unaffected)",
+    "_expect": { "action": "advance", "set_stage_to": "development", "reason_not_contains": "renamed stage" },
+    "card": 1, "stage": "design", "now": "2026-06-20T12:01:00Z",
+    "overlays": { "agent_running": true, "blocked": false },
+    "current_epoch": 1,
+    "lease": { "active": true, "epoch": 1, "role": "designer", "ttl": 1800, "started_at": "2026-06-20T12:00:00Z" },
+    "completion": { "terminal": { "by": "MOVE", "from": "design", "from_label": "design", "to": "development", "epoch": 1 }, "output_present": false },
+    "counters": { "transitions": 1, "bounces": {} },
+    "malformed": { "is_malformed": false, "reasons": [] }
+  }
+]
