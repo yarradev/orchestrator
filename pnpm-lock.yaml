@@ -17,12 +17,12 @@ importers:
 
   packages/adaptor-board:
     dependencies:
+      '@yarradev/board-client':
+        specifier: ^0.1.1
+        version: 0.1.1
       '@yarradev/core':
         specifier: workspace:*
         version: link:../core
-      '@yarrasys/board-client':
-        specifier: ^0.1.0
-        version: 0.1.0
 
   packages/adaptor-github:
     dependencies:
@@ -36,9 +36,15 @@ importers:
 
   packages/cli:
     dependencies:
+      '@yarradev/adaptor-board':
+        specifier: workspace:*
+        version: link:../adaptor-board
       '@yarradev/adaptor-github':
         specifier: workspace:*
         version: link:../adaptor-github
+      '@yarradev/board-client':
+        specifier: ^0.1.0
+        version: 0.1.1
       '@yarradev/core':
         specifier: workspace:*
         version: link:../core
@@ -369,8 +375,8 @@ packages:
   '@vitest/utils@2.1.9':
     resolution: {integrity: sha512-v0psaMSkNJ3A2NMrUEHFRzJtDPFn+/VWZ5WxImB21T9fjucJRmS7xCS3ppEnARb9y11OAzaD+P2Ps+b+BGX5iQ==}
 
-  '@yarrasys/board-client@0.1.0':
-    resolution: {integrity: sha512-bcDQsTnbWB4XFUH8G/ihm8yiDHojTQEaapOEo4VKlRAqQbcXBT5yuMLky5eW2mx7+SdovHrggZMkrH5RMG7cxg==, tarball: https://npm.pkg.github.com/download/@yarrasys/board-client/0.1.0/a11119eb1a5c998420d647c95b17944a4ecadde5}
+  '@yarradev/board-client@0.1.1':
+    resolution: {integrity: sha512-c54sUr81R1DGcQqujIUcqlu1v78sMm34JhVQBE0Hm6sT3ca1v7k4EthqmQyDI7Y4nGcgLYII2Arx/fvdK/Kq7g==, tarball: https://npm.pkg.github.com/download/@yarradev/board-client/0.1.1/29efe8959e488294e76a4a6a3c44cb7544d5631d}
 
   assertion-error@2.0.1:
     resolution: {integrity: sha512-Izi8RQcffqCeNVgFigKli1ssklIbpHnCYc6AknXGYoB6grJqyeby7jv12JUQgmTAnIDnbck1uxksT4dzN3PWBA==}
@@ -753,7 +759,7 @@ snapshots:
       loupe: 3.2.1
       tinyrainbow: 1.2.0
 
-  '@yarrasys/board-client@0.1.0': {}
+  '@yarradev/board-client@0.1.1': {}
 
   assertion-error@2.0.1: {}
 

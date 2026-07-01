@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { opToAct, appendOutcomeToOpResult, mapEnrichedToCanonical } from "../src/conventions.js";
-import type { EnrichedBoardCard } from "@yarrasys/board-client";
+import type { EnrichedBoardCard } from "@yarradev/board-client";
 
 describe("opToAct", () => {
   it("maps claim -> CLAIM with gen=null", () => {

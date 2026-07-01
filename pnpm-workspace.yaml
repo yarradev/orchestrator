@@ -2,3 +2,4 @@ packages:
   - "packages/*"
 minimumReleaseAgeExclude:
   - '@yarrasys/board-client@0.1.0'
+  - '@yarradev/board-client@0.1.1'

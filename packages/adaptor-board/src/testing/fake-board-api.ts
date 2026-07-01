@@ -1,4 +1,4 @@
-import type { EnrichedBoardCard, CardRef, AppendResult, ActInput } from "@yarrasys/board-client";
+import type { EnrichedBoardCard, CardRef, AppendResult, ActInput } from "@yarradev/board-client";
 
 export interface FakeBoardApiOpts {
   terminalStages?: string[];

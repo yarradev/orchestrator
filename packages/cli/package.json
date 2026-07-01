@@ -8,7 +8,8 @@
   "dependencies": {
     "@yarradev/core": "workspace:*",
     "@yarradev/adaptor-github": "workspace:*",
-    "@yarradev/adaptor-board": "workspace:*"
+    "@yarradev/adaptor-board": "workspace:*",
+    "@yarradev/board-client": "^0.1.0"
   },
   "devDependencies": {
     "@types/node": "^26.0.1"
