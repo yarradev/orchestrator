@@ -180,7 +180,8 @@ These materially shape the plan. Recommendations given; confirm or override befo
 ## Phase 1 acceptance gate
 - [ ] ONE `decide` — the plugin has no `lib.mjs`/hand-`decide.mjs`; `list-ready` + CLI wrappers import the vendored core; `grep` confirms.
 - [ ] `orchestrator-core` suite green incl. the ported v1 `cases.json` corpus (behavioral parity); vendored `.mjs` matches `tsc`/esbuild output (CI drift guard green).
-- [ ] All platform suites (`pnpm -r test`) + plugin `node --test` green; `pnpm -r typecheck` clean; LikeC4 drift-check green (remodel the `runner` → plugin+core if needed — coordinate with Phase 3).
+- [ ] All platform suites (`pnpm -r test`) + plugin `node --test` green; `pnpm -r typecheck` clean; LikeC4 drift-check green.
+- [ ] **LikeC4 model flip (target model already merged — commit 4caed9e):** as `orchestrator-core` + `examples/board-smoke` land, flip `platform.orchestratorCore` (+ `coreDecide/coreReduce/coreClient/coreVerdict/coreConfig`), `platform.boardSmoke`, and `runner.vendoredCore` from `#planned`→`#built` and swap their GitHub URL links for relative links (`packages/orchestrator-core/src/…`, `examples/board-smoke/…`); flip `runner.roles.roleAnalyst` only when Phase 2 ships it. Re-run `node scripts/likec4-check.mjs` (relative links are now existence-checked).
 - [ ] `examples/board-smoke` passes (board API drivable by the core, LLM-free).
 - [ ] Dogfood: the plugin drives a card `backlog→…→prod` on `acme:main` end-to-end (or the board-smoke contract stands in, with the live dogfood recorded).
 - [ ] (AMBER) PR per repo; CI green → merge; deploy if prod code shipped (core is client-side — likely no board deploy, but re-verify).
